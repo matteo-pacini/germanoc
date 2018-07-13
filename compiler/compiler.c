@@ -13,18 +13,12 @@
 #endif
 
 int _file_exists(const char *path) {
-    #if __APPLE__
-        //https://stackoverflow.com/a/230068/2890168
-        return access(path, F_OK ) != -1;
-    #elif _WIN32
-        return 0;
-    #elif __linux__
-        return 0;
-    #elif __unix__
-        return 0;
-    #elif defined(_POSIX_VERSION)
-        return 0;
-    #endif
+#if _WIN32
+    return 0;
+#else
+    //https://stackoverflow.com/a/230068/2890168
+    return access(path, F_OK ) != -1;
+#endif
 }
 
 char *_executable_name(CompilerType t) {
@@ -48,7 +42,7 @@ CompilerRef CompilerFind() {
         }
         return NULL;
     #else
-    #error "Compiler only works on macOS!"
+        #error "Compiler only works on macOS!"
     #endif
 #elif __linux__
 #elif __unix__
@@ -70,7 +64,7 @@ void CompilerCompile(CompilerRef compiler, char *source, char* output) {
     assert(source != NULL);
     assert(output != NULL);
 
-    char *args[] = {_executable_name(compiler->type), source, "-o", output, "-O2",  NULL};
+    char *args[] = {_executable_name(compiler->type), source, "-o", output,  NULL};
 
     int status;
     pid_t parent_pid;
@@ -81,11 +75,11 @@ void CompilerCompile(CompilerRef compiler, char *source, char* output) {
 
     switch(child_pid) {
         case -1:
-            fprintf(stderr, "Fork failed -1.\n");
+            fprintf(stderr, "Fork failed (-1).\n");
         case 0:
             execv(compiler->path, args);
             // Shouldn't get here
-            fprintf(stderr, "Fork failed 0.\n");
+            fprintf(stderr, "Fork failed (0).\n");
         default:
             break;
     }
