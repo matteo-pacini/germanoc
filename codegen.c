@@ -3,7 +3,6 @@
 
 #include <glib.h>
 
-#include <llvm-c/Core.h>
 #include <llvm-c/ExecutionEngine.h>
 #include <llvm-c/Target.h>
 #include <llvm-c/Analysis.h>
@@ -83,8 +82,8 @@ void CodegenContextCodegen(CodegenContextRef ctx, mpc_val_t *ast) {
 
 void _CodegenContextCodegenPrintExpr(CodegenContextRef ctx, mpc_ast_t *node) {
 
-    char *quoted_string = node->children[node->children_num-1]->contents;
-    char *clean_string = malloc(strlen(quoted_string-1) * sizeof(char));
+    gchar *quoted_string = node->children[node->children_num-1]->contents;
+    gchar *clean_string = malloc(strlen(quoted_string-1) * sizeof(gchar));
 
     strncpy(clean_string, quoted_string+1, strlen(quoted_string)-2);
     clean_string[strlen(quoted_string)-2] = '\0';
@@ -117,7 +116,7 @@ void CodegenContextOutputIR(CodegenContextRef ctx, FILE *file) {
     g_assert(ctx != NULL);
     g_assert(file != NULL);
 
-    char *ir = LLVMPrintModuleToString(ctx->module);
+    gchar *ir = LLVMPrintModuleToString(ctx->module);
 
     fwrite(ir, strlen(ir), 1, file);
     fflush(file);
@@ -130,8 +129,8 @@ void CodegenContextOutputASM(CodegenContextRef ctx, FILE *file) {
     g_assert(ctx != NULL);
     g_assert(file != NULL);
 
-    char *triple = LLVMGetDefaultTargetTriple();
-    char *error;
+    gchar *triple = LLVMGetDefaultTargetTriple();
+    gchar *error;
 
     LLVMTargetRef target;
     if (LLVMGetTargetFromTriple(triple, &target, &error)) {

@@ -1,6 +1,8 @@
 #include "codegen.h"
 #include "parser.h"
 
+#include <compiler.h>
+
 int main(int argc, char *argv[]) {
 
     LLVMInit();
@@ -55,8 +57,39 @@ int main(int argc, char *argv[]) {
     CodegenContextOutputASM(ctx, stdout);
     printf("\n");
 
-    CodegenContextDelete(ctx);
     ParserDelete(parser);
 
-    return 0;
+    //////////////
+    // Compiler //
+    //////////////
+
+    CompilerRef compiler = CompilerFind();
+
+    if (compiler) {
+
+        gchar *basename = g_path_get_basename(argv[1]);
+        gchar *source = g_strdup_printf("%s.s", basename);
+        gchar *output = g_strdup_printf("%s.compiled", basename);
+        g_free(basename);
+
+        FILE *source_f = fopen(source, "w");
+        CodegenContextOutputASM(ctx, source_f);
+        fclose(source_f);
+
+        CompilerCompile(compiler, source, output);
+        g_free(source);
+        g_free(output);
+
+        CompilerDelete(compiler);
+
+    } else {
+
+        fprintf(stderr, "Could not find a valid compiler on the current target!\n");
+        return EXIT_FAILURE;
+        
+    }
+
+    CodegenContextDelete(ctx);
+
+    return EXIT_SUCCESS;
 }

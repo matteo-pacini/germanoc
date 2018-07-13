@@ -10,6 +10,13 @@ set(CMAKE_C_STANDARD 99)
 add_subdirectory(mpc)
 include_directories(mpc)
 
+############
+# COMPILER #
+############
+
+add_subdirectory(compiler)
+include_directories(compiler)
+
 ########
 # LLVM #
 ########
@@ -42,8 +49,8 @@ include_directories(${GLIB_INCLUDE_DIRS})
 add_definitions(-DVERSION="0.1")
 add_definitions(-DAUTHORS="Matteo Pacini <m@matteopacini.me>|Andrea Proietto <>")
 
-add_executable(germanoc mpc/mpc.h mpc/mpc.c main.c parser.c parser.h codegen.c codegen.h)
+add_executable(germanoc mpc/mpc.h mpc/mpc.c main.c parser.c parser.h codegen.c codegen.h )
 
 llvm_map_components_to_libnames(LLVM_LIBS core executionengine mcjit interpreter analysis native bitwriter)
 
-target_link_libraries(germanoc ${LLVM_LIBS} ${GLIB_LDFLAGS} mpc c++)
+target_link_libraries(germanoc ${LLVM_LIBS} ${GLIB_LDFLAGS} mpc compiler c++)
