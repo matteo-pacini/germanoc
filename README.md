@@ -7,8 +7,11 @@ Un linguaggio di programmazione ispirato e dedicato al mitico Germano Mosconi.
 # Compiler Infos
 
 **Lexer/Parser** : mpc (parsec combinator)
+
 **Language** : C
+
 **Libraries** : GLib/LLVM
+
 **Build System** : CMake
 
 *MosconiLang* viene tradotto in assembly poi compilato per il sistema che invoca il compilatore.
