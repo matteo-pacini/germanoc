@@ -53,4 +53,8 @@ add_executable(germanoc mpc/mpc.h mpc/mpc.c main.c parser.c parser.h codegen.c c
 
 llvm_map_components_to_libnames(LLVM_LIBS core executionengine mcjit interpreter analysis native bitwriter)
 
-target_link_libraries(germanoc ${LLVM_LIBS} ${GLIB_LDFLAGS} mpc compiler c++)
+if ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "AppleClang")
+    target_link_libraries(germanoc ${LLVM_LIBS} ${GLIB_LDFLAGS} mpc compiler c++)
+elseif ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
+    target_link_libraries(germanoc ${LLVM_LIBS} ${GLIB_LDFLAGS} mpc compiler stdc++)
+endif()

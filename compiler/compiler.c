@@ -5,12 +5,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #if __APPLE__
     #define CLANG_PATH "/usr/bin/clang"
     #include <TargetConditionals.h>
-    #include <unistd.h>
+#elif __linux__
+    #define GCC_PATH "/usr/bin/gcc"
+    #include <sys/wait.h>
 #endif
+
 
 int _file_exists(const char *path) {
 #if _WIN32
@@ -45,7 +49,15 @@ CompilerRef CompilerFind() {
         #error "Compiler only works on macOS!"
     #endif
 #elif __linux__
+        if (_file_exists(GCC_PATH)) {
+            CompilerRef compiler = malloc(sizeof(Compiler));
+            compiler->type = GCC;
+            compiler->path = strdup(GCC_PATH);
+            return compiler;
+        }
+        return NULL;
 #elif __unix__
+
 #elif defined(_POSIX_VERSION)
     #error "Unsupported operating system!"
 #endif
@@ -64,7 +76,7 @@ void CompilerCompile(CompilerRef compiler, char *source, char* output) {
     assert(source != NULL);
     assert(output != NULL);
 
-    char *args[] = {_executable_name(compiler->type), source, "-o", output,  NULL};
+    char *args[] = {compiler->path, source, "-o", output,  NULL};
 
     int status;
     pid_t parent_pid;

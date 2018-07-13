@@ -146,7 +146,7 @@ void CodegenContextOutputASM(CodegenContextRef ctx, FILE *file) {
                 "",
                 "",
                 LLVMCodeGenLevelDefault,
-                LLVMRelocDefault,
+                LLVMRelocPIC,
                 LLVMCodeModelDefault
         );
 
