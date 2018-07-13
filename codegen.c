@@ -1,55 +1,52 @@
 
 #include "codegen.h"
 
-#include <assert.h>
+#include <glib.h>
 
-inline LLVMTypeRef _main();
-inline LLVMTypeRef _printf();
+#include <llvm-c/Core.h>
 
-void codegen(LLVMModuleRef module, LLVMValueRef *main, mpc_ast_t *program) {
-
-    assert(module != NULL);
-    assert(main != NULL);
-    assert(program != NULL);
-
-    LLVMValueRef printf_func = LLVMAddFunction(module, "printf", _printf());
-    *main = LLVMAddFunction(module, "main", _main());
-
-    LLVMBasicBlockRef block = LLVMAppendBasicBlock(*main, "entrypoint");
-
-    LLVMBuilderRef builder = LLVMCreateBuilder();
-    LLVMPositionBuilderAtEnd(builder, block);
-
-    LLVMBuildRetVoid(builder);
-
-    LLVMDisposeBuilder(builder);
+LLVMTypeRef _printf_type() {
+    LLVMTypeRef args[] = {
+            LLVMPointerType(LLVMInt8Type(), 0)
+    };
+    return LLVMFunctionType(
+            LLVMInt32Type(),
+            args,
+            1,
+            1
+    );
 }
 
-LLVMTypeRef _main() {
-
-    // void main(void)
-    LLVMTypeRef func = LLVMFunctionType(
+LLVMTypeRef _main_type() {
+    LLVMTypeRef args[] = {};
+    return LLVMFunctionType(
             LLVMVoidType(),
-            NULL,
+            args,
             0,
             0
     );
-
-    return func;
-
 }
 
-LLVMTypeRef _printf() {
+CodegenContextRef CodegenContextCreate() {
+    CodegenContextRef ctx = g_new0(CodegenContext, 1);
+    ctx->module = LLVMModuleCreateWithName("mosconilang");
+    ctx->printf_fn = LLVMAddFunction(ctx->module, "printf", _printf_type());
+    ctx->main_fn = LLVMAddFunction(ctx->module, "main", _main_type());
+    LLVMBasicBlockRef entrypoint = LLVMAppendBasicBlock(ctx->main_fn, "entrypoint");
+    ctx->builder = LLVMCreateBuilder();
+    LLVMPositionBuilderAtEnd(ctx->builder, entrypoint);
+    return ctx;
+}
 
-    // int printf(const char *format, ...)
-    LLVMTypeRef args[] = { LLVMPointerType(LLVMInt8Type(), 0) };
-    LLVMTypeRef func = LLVMFunctionType(
-            LLVMInt32Type(),
-            args,
-            0,
-            1
-    );
+void CodegenContextDelete(CodegenContextRef ctx) {
+    if (ctx) {
+        if (ctx->builder) LLVMDisposeBuilder(ctx->builder);
+        if (ctx->module) LLVMDisposeModule(ctx->module);
+        g_free(ctx);
+    }
+}
 
-    return func;
-
+void CodegenContextAddRet(CodegenContextRef ctx) {
+    g_assert(ctx != NULL);
+    LLVMBuildRetVoid(ctx->builder);
 }

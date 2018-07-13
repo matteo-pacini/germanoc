@@ -2,16 +2,22 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include "mpc.h"
+#include <glib.h>
 
-extern int parser_initialised;
+#include <mpc.h>
 
-extern mpc_parser_t *string;
-extern mpc_parser_t *print_expr;
-extern mpc_parser_t *expr;
-extern mpc_parser_t *program;
+struct Parser {
+    GArray *_subparsers;
+    mpc_parser_t *_parser;
+    mpc_val_t *output;
+    mpc_err_t *error;
+};
 
-void  parser_init(mpc_err_t **error);
-void  parser_deinit();
+typedef struct Parser  Parser;
+typedef struct Parser *ParserRef;
+
+ParserRef ParserCreate(mpc_err_t **error);
+void      ParserDelete(ParserRef parser);
+void      ParserParseFile(ParserRef parser, const gchar *filename);
 
 #endif //PARSER_H

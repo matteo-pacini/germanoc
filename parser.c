@@ -1,51 +1,74 @@
 
 #include "parser.h"
 
-int parser_initialised = 0;
+#include <mpc.h>
 
-mpc_parser_t *string = NULL;
-mpc_parser_t *print_expr = NULL;
-mpc_parser_t *expr = NULL;
-mpc_parser_t *program  = NULL;
+ParserRef ParserCreate(mpc_err_t **error) {
 
-void parser_init(mpc_err_t **error) {
+    g_assert(error != NULL);
 
-    string = mpc_new("string");
-    print_expr = mpc_new("print_expr");
-    expr = mpc_new("expr");
-    program = mpc_new("program");
+    ParserRef parser = g_new0(Parser, 1);
 
-    mpc_err_t * _error =
-            mpca_lang(MPCA_LANG_DEFAULT,
-                      "string     : /\"(\\\\.|[^\"])*\"/                                                                      ;\n"
-                      "print_expr : \"METTI\" \"UN\" (\"A\")? <string>                                                        ;\n"
-                      "expr       : <print_expr>                                                                              ;\n"
-                      "program    : /^/ \"AMICI IN ASCOLTO, UN CORDIALE BUONGIORNO\" <expr>* \"ANDIAMO DALLA SIGLA, DAI\" /$/ ;\n",
-                      string,
-                      print_expr,
-                      expr,
-                      program,
-                      NULL
-            );
+    mpc_parser_t * string = mpc_new("string");
+    mpc_parser_t * print_expr = mpc_new("print_expr");
+    mpc_parser_t * expr = mpc_new("expr");
+    mpc_parser_t * mosconilang = mpc_new("mosconilang");
 
-    if (_error && error) {
-        *error = _error;
+    *error =
+    mpca_lang(MPCA_LANG_DEFAULT,
+              "string      : /\"(\\\\.|[^\"])*\"/                                                                      ;\n"
+              "print_expr  : \"METTI\" \"UN\" (\"A\"|\"O\")? <string>                                                  ;\n"
+              "expr        : <print_expr>                                                                              ;\n"
+              "mosconilang : /^/ \"AMICI IN ASCOLTO, UN CORDIALE BUONGIORNO\" <expr>* \"ANDIAMO DALLA SIGLA, DAI\" /$/ ;\n",
+              string,
+              print_expr,
+              expr,
+              mosconilang,
+              NULL
+    );
+
+    if (*error) {
+        return NULL;
     }
 
-    if (!_error) {
-        parser_initialised = 1;
-    }
+    parser->_parser = mosconilang;
+
+    parser->_subparsers = g_array_new(FALSE, FALSE, sizeof(mpc_parser_t*));
+    g_array_append_val(parser->_subparsers, expr);
+    g_array_append_val(parser->_subparsers, print_expr);
+    g_array_append_val(parser->_subparsers, string);
+
+    return parser;
 
 }
 
-void parser_deinit() {
+void ParserDelete(ParserRef parser) {
+    if (parser) {
+        if (parser->_parser) mpc_delete(parser->_parser);
+        if (parser->_subparsers) {
+            for(int i=0; i<parser->_subparsers->len; i++) {
+                mpc_delete(g_array_index(parser->_subparsers, mpc_parser_t*, i));
+            }
+            g_array_free(parser->_subparsers, FALSE);
+        }
+        if (parser->output) mpc_ast_delete(parser->output);
+        if (parser->error) mpc_err_delete(parser->error);
+        g_free(parser);
+    }
+}
 
-    mpc_cleanup(4,
-                string,
-                print_expr,
-                expr,
-                program);
+void ParserParseFile(ParserRef parser, const gchar *filename) {
 
-    parser_initialised = 0;
+    g_assert(parser != NULL);
+    g_assert(filename != NULL && strlen(filename) > 0);
+
+    mpc_result_t result;
+    mpc_parse_contents(filename, parser->_parser, &result);
+
+    if (result.output) {
+        parser->output = result.output;
+    } else {
+        parser->error = result.error;
+    }
 
 }
