@@ -15,10 +15,15 @@ struct CodegenContext {
 };
 
 typedef struct CodegenContext  CodegenContext;
-typedef struct CodegenContext *CodegenContextRef;
+typedef struct CodegenContext* CodegenContextRef;
+
+void              LLVMInit();
 
 CodegenContextRef CodegenContextCreate();
 void              CodegenContextDelete(CodegenContextRef ctx);
+void              CodegenContextCodegen(CodegenContextRef ctx, mpc_val_t *ast);
 void              CodegenContextAddRet(CodegenContextRef ctx);
+void              CodegenContextOutputIR(CodegenContextRef ctx, FILE *file);
+void              CodegenContextOutputASM(CodegenContextRef ctx, FILE *file);
 
 #endif //CODEGEN_H

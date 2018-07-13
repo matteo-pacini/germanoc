@@ -14,7 +14,7 @@ struct Parser {
 };
 
 typedef struct Parser  Parser;
-typedef struct Parser *ParserRef;
+typedef struct Parser* ParserRef;
 
 ParserRef ParserCreate(mpc_err_t **error);
 void      ParserDelete(ParserRef parser);

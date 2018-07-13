@@ -3,11 +3,13 @@
 
 int main(int argc, char *argv[]) {
 
+    LLVMInit();
+
     ////////////
     // Header //
     ////////////
 
-    printf("MosconiLang JIT v" VERSION ".\n");
+    printf("MosconiLang Compiler v" VERSION ".\n");
     gchar** authors = g_strsplit(AUTHORS, "|", 2);
     for (gchar **ptr = authors; *ptr; ptr++) {
         printf("Author: %s.\n", *ptr);
@@ -35,16 +37,26 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
+    printf("AST:\n");
     mpc_ast_print(parser->output);
-    ParserDelete(parser);
+    printf("\n");
 
     ////////////////////
     // LLVM - Codegen //
     ////////////////////
 
     CodegenContextRef ctx = CodegenContextCreate();
+    CodegenContextCodegen(ctx, parser->output);
     CodegenContextAddRet(ctx);
+
+    printf("LLVM IR:\n");
+    CodegenContextOutputIR(ctx, stdout);
+    printf("\nASM:\n");
+    CodegenContextOutputASM(ctx, stdout);
+    printf("\n");
+
     CodegenContextDelete(ctx);
+    ParserDelete(parser);
 
     return 0;
 }
