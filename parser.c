@@ -9,12 +9,17 @@
 // Fold //
 //////////
 
+static void _garray_astexpr_free(gpointer data) {
+    ASTExprDelete(data);
+}
+
 static mpc_val_t *mpcf_ast_expr_garray(int n, mpc_val_t **xs) {
     GArray *array = g_array_new(FALSE, FALSE, sizeof(ASTExpr*));
     for (int i=0; i<n; i++) {
         ASTExpr *current = xs[i];
         g_array_append_val(array, current);
     }
+    g_array_set_clear_func(array, _garray_astexpr_free);
     return array;
 }
 
@@ -113,7 +118,7 @@ void ParserDelete(ParserRef parser) {
             }
             g_array_free(parser->_subparsers, FALSE);
         }
-        if (parser->output) g_array_free(parser->output, FALSE);
+        if (parser->output) g_array_free(parser->output, TRUE);
         if (parser->error) mpc_err_delete(parser->error);
         g_free(parser);
     }
