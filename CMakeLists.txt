@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(germanoc C)
+project(germanoc)
 
 set(CMAKE_C_STANDARD 99)
 
@@ -53,8 +53,4 @@ add_executable(germanoc main.c parser.c parser.h codegen.c codegen.h )
 
 llvm_map_components_to_libnames(LLVM_LIBS core executionengine mcjit interpreter analysis native bitwriter)
 
-if ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "AppleClang")
-    target_link_libraries(germanoc ${LLVM_LIBS} ${GLIB_LDFLAGS} mpc compiler c++)
-elseif ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
-    target_link_libraries(germanoc ${LLVM_LIBS} ${GLIB_LDFLAGS} mpc compiler stdc++)
-endif()
+target_link_libraries(germanoc ${LLVM_LIBS} ${GLIB_LDFLAGS} mpc compiler)
