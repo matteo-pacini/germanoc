@@ -1,6 +1,8 @@
 # MosconiLang
 
-Un linguaggio di programmazione ispirato e dedicato al mitico Germano Mosconi.
+Un linguaggio di programmazione ispirato e dedicato al mitico [Germano Mosconi](https://it.wikipedia.org/wiki/Germano_Mosconi).
+
+*A programming language inspired and dedicated to [Germano Mosconi](https://en.wikipedia.org/wiki/Germano_Mosconi).*
 
 ![Germano Mosconi](germano.jpg)
 
@@ -10,29 +12,27 @@ Un linguaggio di programmazione ispirato e dedicato al mitico Germano Mosconi.
 
 **Language** : C
 
-**Libraries** : GLib/LLVM
+**Libraries** : GLib2.0 / LLVM 6.x
 
 **Build System** : CMake
 
-*MosconiLang* viene tradotto in assembly poi compilato per il sistema che invoca il compilatore.
-
-# Esempi
+# Esempi (*Examples*)
 
 ## Hello World
 
-    # Questo e' un commento.
+    # Questo e' un commento - this is a comment.
     AMICI IN ASCOLTO, UN CORDIABLE BUONGIORNO
     METTI UN "Hello World!"
     ANDIAMO DALLA SIGLA DAI
     
-## Dichiarazione variabile
+## Dichiarazione variabile - *Declare a variable*
 
     AMICI IN ASCOLTO, UN CORDIALE BUONGIORNO
     MA COS'E' STA idiozia? 10
     METTI UNA idiozia
     ANDIAMO DALLA SIGLA DAI
     
-## Operazioni su variabili
+## Operazioni su variabili - *Operations on variables*
 
     AMICI IN ASCOLTO, UN CORDIALE BUONGIORNO
 
@@ -52,26 +52,30 @@ Un linguaggio di programmazione ispirato e dedicato al mitico Germano Mosconi.
 
     ANDIAMO DALLA SIGLA DAI
 
-# Istruzioni
+# Istruzioni - *Instructions*
 
 L'unico tipo dato manipolabile in *MosconiLang* e' un intero a 4-byte.
 
-[`AMICI IN ASCOLTO, UN CORDIABLE BUONGIORNO`](https://youtu.be/GBACLpkon6Q?t=1s) Inizio programma.
+*MosconiLang has only got one type of data: a 4 byte integer.*
 
-[`METTI UN/UNA <STRINGA>`](https://youtu.be/GBACLpkon6Q?t=12m14s) Stampa **STRINGA** a video.
+[`AMICI IN ASCOLTO, UN CORDIABLE BUONGIORNO`](https://youtu.be/GBACLpkon6Q?t=1s) Inizio programma - *Beginning of the program*
 
-[`METTI UN/UNA <ID>`](https://youtu.be/GBACLpkon6Q?t=12m14s) Stampa la variabile **ID** a video.
+[`METTI UN/UNA <STRINGA>`](https://youtu.be/GBACLpkon6Q?t=12m14s) Stampa **STRINGA** a video - *Prints **STRINGA** to stdout*
 
-[`MA COS'E' STO <ID>? <NUMERO>`](https://youtu.be/GBACLpkon6Q?t=1m33s) Crea una variabile di nome **ID**, avente valore **NUMERO**.
+[`METTI UN/UNA <ID>`](https://youtu.be/GBACLpkon6Q?t=12m14s) Stampa la variabile **ID** a video - *Prints content of variable **ID** to stdout*
 
-[`DAMME CAMPO LUNGO SU <ID>`](https://youtu.be/GBACLpkon6Q?t=14m10s) Legge un intero da **stdin** nella variabile **ID**.
+[`MA COS'E' STO <ID>? <NUMERO>`](https://youtu.be/GBACLpkon6Q?t=1m33s) Crea una variabile di nome **ID**, avente valore **NUMERO** - *Creates a variable called **ID** with value **NUMERO***
 
-[`ANDIAMO DALLA SIGLA DAI`](https://youtu.be/IENTp4ZCvR0?t=2m5s) Termina il programma.
+[`DAMME CAMPO LUNGO SU <ID>`](https://youtu.be/GBACLpkon6Q?t=14m10s) Legge un intero da **stdin** nella variabile **ID** - *Reads an integer from **stdin** into variable **ID***
 
-## Modifica variabili
+[`ANDIAMO DALLA SIGLA DAI`](https://youtu.be/IENTp4ZCvR0?t=2m5s) Termina il programma - *End of the program*
+
+## Modifica variabili - *Modify variables*
 
 Le variabili possono essere modificate una alla volte, ed e' necessario "pusharle" sullo stack
 con la seguente istruzione:
+
+*Variables can be modified one at the time, by pushing them on a stack via the following instruction:*
 
 `ANDIAMO ALLE NOTIZIE SU/SULLA <ID>`
 
@@ -97,7 +101,28 @@ Per terminare la serie di operazioni, si utilizzi la seguente istruzione:
 
 `ME TOCCA RIFARE TUTTO DA CAPO` 
 
-# Compilazione
+# Requisiti
+
+## macos
+
+    brew install cmake glib pkg-config llvm
+    
+## Linux (apt-get)
+
+    sudo apt-get install build-essential \
+                         llvm-dev \
+                         libglib2.0-dev \
+                         pkg-config \
+                         cmake
+    
+## Windows (MINGW64)
+
+    pacman -S mingw-w64-x86_64-toolchain \
+              mingw-w64-x86_64-clang \
+              mingw-w64-x86_64-llvm \
+              mingw-w64-x86_64-pkg-config \ 
+              mingw-w64-x86_64-glib2 \
+              mingw-w64-x86_64-polly
 
 # Licenses
 
