@@ -41,23 +41,35 @@ void LLVMInit() {
 }
 
 CodegenContextRef CodegenContextCreate() {
+
     CodegenContextRef ctx = g_new0(CodegenContext, 1);
+
     ctx->module = LLVMModuleCreateWithName("mosconilang");
+
     ctx->printf_fn = LLVMAddFunction(ctx->module, "printf", _printf_type());
     ctx->main_fn = LLVMAddFunction(ctx->module, "main", _main_type());
+
     LLVMBasicBlockRef entrypoint = LLVMAppendBasicBlock(ctx->main_fn, "entrypoint");
+
     ctx->builder = LLVMCreateBuilder();
     LLVMPositionBuilderAtEnd(ctx->builder, entrypoint);
+
     ctx->printf_str_fmt = LLVMBuildGlobalStringPtr(ctx->builder, "%s\n", "printf_str_fmt");
+
     return ctx;
+
 }
 
 void CodegenContextDelete(CodegenContextRef ctx) {
+
+    g_assert(ctx != NULL);
+
     if (ctx) {
         if (ctx->builder) LLVMDisposeBuilder(ctx->builder);
         if (ctx->module) LLVMDisposeModule(ctx->module);
         g_free(ctx);
     }
+
 }
 
 void CodegenContextCodegen(CodegenContextRef ctx, mpc_val_t *ast) {
@@ -80,12 +92,20 @@ void CodegenContextCodegen(CodegenContextRef ctx, mpc_val_t *ast) {
 }
 
 void _CodegenContextCodegenExpr(CodegenContextRef ctx, mpc_ast_t *node) {
+
+    g_assert(ctx != NULL);
+    g_assert(node != NULL);
+
     if (g_str_has_prefix(node->tag, "expr|print_expr")) {
         _CodegenContextCodegenPrintExpr(ctx, node);
     }
+
 }
 
 void _CodegenContextCodegenPrintExpr(CodegenContextRef ctx, mpc_ast_t *node) {
+
+    g_assert(ctx != NULL);
+    g_assert(node != NULL);
 
     gchar *quoted_string = node->children[node->children_num-1]->contents;
     gchar *clean_string = malloc(strlen(quoted_string-1) * sizeof(gchar));
@@ -112,8 +132,10 @@ void _CodegenContextCodegenPrintExpr(CodegenContextRef ctx, mpc_ast_t *node) {
 }
 
 void CodegenContextAddRet(CodegenContextRef ctx) {
+
     g_assert(ctx != NULL);
     LLVMBuildRetVoid(ctx->builder);
+
 }
 
 void CodegenContextOutputIR(CodegenContextRef ctx, FILE *file) {
@@ -135,7 +157,7 @@ void CodegenContextOutputASM(CodegenContextRef ctx, FILE *file) {
     g_assert(file != NULL);
 
     gchar *triple = LLVMGetDefaultTargetTriple();
-    gchar *error;
+    gchar *error ;
 
     LLVMTargetRef target;
     if (LLVMGetTargetFromTriple(triple, &target, &error)) {

@@ -28,6 +28,10 @@ ParserRef ParserCreate(mpc_err_t **error) {
     );
 
     if (*error) {
+        mpc_delete(string);
+        mpc_delete(print_expr);
+        mpc_delete(expr);
+        mpc_delete(mosconilang);
         return NULL;
     }
 

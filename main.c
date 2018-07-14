@@ -78,9 +78,11 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    printf("AST:\n");
-    mpc_ast_print(parser->output);
-    printf("\n");
+    if (verbose->count > 0) {
+        printf("AST:\n");
+        mpc_ast_print(parser->output);
+        printf("\n");
+    }
 
     ////////////////////
     // LLVM - Codegen //
@@ -90,11 +92,13 @@ int main(int argc, char *argv[]) {
     CodegenContextCodegen(ctx, parser->output);
     CodegenContextAddRet(ctx);
 
-    printf("LLVM IR:\n");
-    CodegenContextOutputIR(ctx, stdout);
-    printf("\nASM:\n");
-    CodegenContextOutputASM(ctx, stdout);
-    printf("\n");
+    if (verbose->count > 0) {
+        printf("LLVM IR:\n");
+        CodegenContextOutputIR(ctx, stdout);
+        printf("\nASM:\n");
+        CodegenContextOutputASM(ctx, stdout);
+        printf("\n");
+    }
 
     ParserDelete(parser);
 
