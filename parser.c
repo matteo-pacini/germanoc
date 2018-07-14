@@ -23,11 +23,7 @@ static mpc_val_t *mpcf_ast_expr_garray(int n, mpc_val_t **xs) {
 ///////////
 
 static mpc_val_t *mpc_to_print_expr(mpc_val_t* input) {
-    char *string = input;
-    ASTExpr *expr = g_new0(ASTExpr, 1);
-    expr->type = AST_EXPR_TYPE_PRINT_LITERAL;
-    expr->data = strdup(string);
-    return expr;
+    return ASTExprCreatePrintLiteral(input);
 }
 
 //////////

@@ -72,12 +72,6 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    if (verbose->count > 0) {
-        printf("AST:\n");
-        mpc_ast_print(parser->output);
-        printf("\n");
-    }
-
     GArray *exprs = parser->output;
 
     ////////////////////
