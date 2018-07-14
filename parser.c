@@ -3,9 +3,42 @@
 
 #include <mpc.h>
 
-ParserRef ParserCreate(mpc_err_t **error) {
+#include "ast.h"
 
-    g_assert(error != NULL);
+//////////
+// Fold //
+//////////
+
+static mpc_val_t *mpcf_ast_expr_garray(int n, mpc_val_t **xs) {
+    GArray *array = g_array_new(FALSE, FALSE, sizeof(ASTExpr*));
+    for (int i=0; i<n; i++) {
+        ASTExpr *current = xs[i];
+        g_array_append_val(array, current);
+    }
+    return array;
+}
+
+///////////
+// Apply //
+///////////
+
+static mpc_val_t *mpc_to_print_expr(mpc_val_t* input) {
+    char *string = input;
+    ASTExpr *expr = g_new0(ASTExpr, 1);
+    expr->type = AST_EXPR_TYPE_PRINT_LITERAL;
+    expr->data = strdup(string);
+    return expr;
+}
+
+//////////
+// Dtor //
+//////////
+
+static void mpc_dtor_garray(mpc_val_t *val) {
+    g_array_free(val, FALSE);
+}
+
+ParserRef ParserCreate() {
 
     ParserRef parser = g_new0(Parser, 1);
 
@@ -14,26 +47,55 @@ ParserRef ParserCreate(mpc_err_t **error) {
     mpc_parser_t * expr = mpc_new("expr");
     mpc_parser_t * mosconilang = mpc_new("mosconilang");
 
-    *error =
-    mpca_lang(MPCA_LANG_DEFAULT,
-              "string      : /\"(\\\\.|[^\"])*\"/                                                                      ;\n"
-              "print_expr  : \"METTI\" \"UN\" (\"A\"|\"O\")? <string>                                                  ;\n"
-              "expr        : <print_expr>                                                                              ;\n"
-              "mosconilang : /^/ \"AMICI IN ASCOLTO, UN CORDIALE BUONGIORNO\" <expr>* \"ANDIAMO DALLA SIGLA, DAI\" /$/ ;\n",
-              string,
-              print_expr,
-              expr,
-              mosconilang,
-              NULL
+    // string: string_literal
+    mpc_define(string,
+        mpc_apply(
+            mpc_string_lit(),
+            mpcf_unescape
+        )
     );
 
-    if (*error) {
-        mpc_delete(string);
-        mpc_delete(print_expr);
-        mpc_delete(expr);
-        mpc_delete(mosconilang);
-        return NULL;
-    }
+    // print_expr : "METTI UN" ("A"|"O") <string>
+    mpc_define(print_expr,
+        mpc_apply(
+            mpc_and(
+                3,
+                mpcf_trd,
+                mpc_string("METTI UN"),
+                mpc_tok(mpc_maybe(mpc_or(2, mpc_char('A'), mpc_char('O')))),
+                mpc_tok(string),
+                free,
+                free
+            ),
+            mpc_to_print_expr
+        )
+    );
+
+    // expr: <print_expr>
+    mpc_define(expr,
+        mpc_or(
+            1,
+            print_expr
+        )
+    );
+
+    // mosconilang: "AMICI IN ASCOLTO, UN CORDIALE BUONGIORNO" <expr>* "ANDIAMO DALLA SIGLA, DAI"
+    mpc_define(mosconilang,
+       mpc_strip(
+           mpc_and(
+               3,
+               mpcf_snd,
+               mpc_tok(mpc_string("AMICI IN ASCOLTO, UN CORDIALE BUONGIORNO")),
+               mpc_many(
+                   mpcf_ast_expr_garray,
+                   expr
+               ),
+               mpc_string("ANDIAMO DALLA SIGLA, DAI"),
+               free,
+               mpc_dtor_garray
+           )
+       )
+    );
 
     parser->_parser = mosconilang;
 
@@ -55,7 +117,7 @@ void ParserDelete(ParserRef parser) {
             }
             g_array_free(parser->_subparsers, FALSE);
         }
-        if (parser->output) mpc_ast_delete(parser->output);
+        if (parser->output) g_array_free(parser->output, FALSE);
         if (parser->error) mpc_err_delete(parser->error);
         g_free(parser);
     }

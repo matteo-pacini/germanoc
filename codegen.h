@@ -4,7 +4,8 @@
 
 #include <llvm-c/Core.h>
 
-#include "mpc.h"
+#include <stdio.h>
+#include <glib.h>
 
 struct CodegenContext {
     LLVMModuleRef module;
@@ -21,7 +22,7 @@ void              LLVMInit();
 
 CodegenContextRef CodegenContextCreate();
 void              CodegenContextDelete(CodegenContextRef ctx);
-void              CodegenContextCodegen(CodegenContextRef ctx, mpc_val_t *ast);
+void              CodegenContextCodegen(CodegenContextRef ctx, GArray *exprs);
 void              CodegenContextAddRet(CodegenContextRef ctx);
 void              CodegenContextOutputIR(CodegenContextRef ctx, FILE *file);
 void              CodegenContextOutputASM(CodegenContextRef ctx, FILE *file);

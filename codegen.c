@@ -1,15 +1,17 @@
 
 #include "codegen.h"
 
-#include <glib.h>
-
 #include <llvm-c/ExecutionEngine.h>
 #include <llvm-c/Target.h>
 #include <llvm-c/Analysis.h>
 #include <llvm-c/BitWriter.h>
 
-void _CodegenContextCodegenExpr(CodegenContextRef ctx, mpc_ast_t *node);
-void _CodegenContextCodegenPrintExpr(CodegenContextRef ctx, mpc_ast_t *node);
+#include <mpc.h>
+
+#include "ast.h"
+
+void _CodegenContextCodegenExpr(CodegenContextRef ctx, ASTExprRef expr);
+void _CodegenContextCodegenPrintExpr(CodegenContextRef ctx, ASTExprRef expr);
 
 LLVMTypeRef _printf_type() {
     LLVMTypeRef args[] = {
@@ -72,50 +74,35 @@ void CodegenContextDelete(CodegenContextRef ctx) {
 
 }
 
-void CodegenContextCodegen(CodegenContextRef ctx, mpc_val_t *ast) {
+void CodegenContextCodegen(CodegenContextRef ctx, GArray *exprs) {
 
     g_assert(ctx != NULL);
-    g_assert(ast != NULL);
+    g_assert(exprs != NULL);
 
-    mpc_ast_trav_t *trav = mpc_ast_traverse_start(ast, mpc_ast_trav_order_pre);
-    mpc_ast_t *current_node = mpc_ast_traverse_next(&trav);
-
-    while (current_node != NULL) {
-        if (g_str_has_prefix(current_node->tag, "expr")) {
-            _CodegenContextCodegenExpr(ctx, current_node);
-        }
-        current_node = mpc_ast_traverse_next(&trav);
-    }
-
-    mpc_ast_traverse_free(&trav);
-
-}
-
-void _CodegenContextCodegenExpr(CodegenContextRef ctx, mpc_ast_t *node) {
-
-    g_assert(ctx != NULL);
-    g_assert(node != NULL);
-
-    if (g_str_has_prefix(node->tag, "expr|print_expr")) {
-        _CodegenContextCodegenPrintExpr(ctx, node);
+    for (int i=0; i<exprs->len; i++) {
+        ASTExpr *expr = g_array_index(exprs, ASTExpr*, i);
+        _CodegenContextCodegenExpr(ctx, expr);
     }
 
 }
 
-void _CodegenContextCodegenPrintExpr(CodegenContextRef ctx, mpc_ast_t *node) {
+void _CodegenContextCodegenExpr(CodegenContextRef ctx, ASTExprRef expr) {
 
     g_assert(ctx != NULL);
-    g_assert(node != NULL);
+    g_assert(expr != NULL);
 
-    gchar *quoted_string = node->children[node->children_num-1]->contents;
-    gchar *clean_string = malloc(strlen(quoted_string-1) * sizeof(gchar));
+    _CodegenContextCodegenPrintExpr(ctx, expr);
 
-    strncpy(clean_string, quoted_string+1, strlen(quoted_string)-2);
-    clean_string[strlen(quoted_string)-2] = '\0';
+}
+
+void _CodegenContextCodegenPrintExpr(CodegenContextRef ctx, ASTExprRef expr) {
+
+    g_assert(ctx != NULL);
+    g_assert(expr != NULL);
 
     LLVMValueRef str = LLVMBuildGlobalStringPtr(
             ctx->builder,
-            clean_string,
+            expr->data,
             ""
     );
     LLVMValueRef printf_args[] = { ctx->printf_str_fmt, str };
@@ -126,8 +113,6 @@ void _CodegenContextCodegenPrintExpr(CodegenContextRef ctx, mpc_ast_t *node) {
           2,
           ""
     );
-
-    free(clean_string);
 
 }
 

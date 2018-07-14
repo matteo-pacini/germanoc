@@ -3,6 +3,7 @@
 
 #include <compiler.h>
 #include <argtable3.h>
+#include "ast.h"
 
 struct arg_lit *verbose, *help;
 struct arg_file *output, *file;
@@ -61,19 +62,12 @@ int main(int argc, char *argv[]) {
     // Parser combinator //
     ///////////////////////
 
-    mpc_err_t *error;
-    ParserRef parser = ParserCreate(&error);
-    if (error) {
-        mpc_err_print(error);
-        mpc_err_delete(error);
-        ParserDelete(parser);
-        return EXIT_FAILURE;
-    }
+    ParserRef parser = ParserCreate();
 
     ParserParseFile(parser, *file->filename);
 
     if (parser->error) {
-        mpc_err_print(error);
+        mpc_err_print(parser->error);
         ParserDelete(parser);
         return EXIT_FAILURE;
     }
@@ -83,6 +77,8 @@ int main(int argc, char *argv[]) {
         mpc_ast_print(parser->output);
         printf("\n");
     }
+
+    GArray *exprs = parser->output;
 
     ////////////////////
     // LLVM - Codegen //
