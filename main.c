@@ -2,10 +2,49 @@
 #include "parser.h"
 
 #include <compiler.h>
+#include <argtable3.h>
+
+struct arg_lit *verbose, *help;
+struct arg_file *output, *file;
+struct arg_end *end;
 
 int main(int argc, char *argv[]) {
 
     LLVMInit();
+
+    //////////////////
+    // Command Line //
+    //////////////////
+
+    void *argtable[] = {
+            help    = arg_litn(NULL, "help", 0, 1, "Display this help and exit"),
+            verbose = arg_litn(NULL, "verbose", 0, 1, "Be verbose"),
+            output  = arg_filen("o", "output", "outfile", 0, 1, "Output file"),
+            file    = arg_filen(NULL, NULL, "<FILE>", 0, 1, "Input file"),
+            end     = arg_end(20),
+    };
+
+    int nerrors;
+    nerrors = arg_parse(argc,argv,argtable);
+
+    int should_quit_after_header = 0;
+
+    if (help->count > 0)
+    {
+        printf("Usage: germanoc");
+        arg_print_syntax(stdout, argtable, "\n");
+        printf("MosconiLang compiler.\n\n");
+        arg_print_glossary(stdout, argtable, "  %-25s %s\n");
+        arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
+        return EXIT_SUCCESS;
+    }
+
+    if (nerrors > 0) {
+        arg_print_errors(stderr, end, "germanoc");
+        fprintf(stderr, "Try 'germanoc --help' for more information.\n");
+        arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
+        return EXIT_FAILURE;
+    }
 
     ////////////
     // Header //
@@ -31,7 +70,7 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    ParserParseFile(parser, argv[1]);
+    ParserParseFile(parser, *file->filename);
 
     if (parser->error) {
         mpc_err_print(error);
@@ -67,18 +106,15 @@ int main(int argc, char *argv[]) {
 
     if (compiler) {
 
-        gchar *basename = g_path_get_basename(argv[1]);
+        const gchar *basename = *file->basename;
         gchar *source = g_strdup_printf("%s.s", basename);
-        gchar *output = g_strdup_printf("%s.compiled", basename);
-        g_free(basename);
 
         FILE *source_f = fopen(source, "w");
         CodegenContextOutputASM(ctx, source_f);
         fclose(source_f);
 
-        CompilerCompile(compiler, source, output);
+        CompilerCompile(compiler, source, (char *) *output->filename);
         g_free(source);
-        g_free(output);
 
         CompilerDelete(compiler);
 
@@ -89,6 +125,7 @@ int main(int argc, char *argv[]) {
         
     }
 
+    arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
     CodegenContextDelete(ctx);
 
     return EXIT_SUCCESS;

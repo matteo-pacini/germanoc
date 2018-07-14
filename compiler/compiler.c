@@ -8,12 +8,12 @@
 #include <unistd.h>
 
 #if _WIN32
-#include <windows.h>
-#include <tchar.h>
+    #include <windows.h>
+    #include <tchar.h>
     #if defined(_WIN64)
         #define MINGW_CLANG_PATH "C:\\msys64\\mingw64\\bin\\clang.exe"
     #else
-        #error "32 bit architecture is not currently supported!"
+        #error "32 bit architecture is not supported"
     #endif
 #elif __APPLE__
     #define CLANG_PATH "/usr/bin/clang"
@@ -32,7 +32,7 @@ int _file_exists(const char *path) {
             !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
 #else
     // https://stackoverflow.com/a/230068/2890168
-    return access(path, F_OK ) != -1;
+    return access(path, F_OK) != -1;
 #endif
 }
 
@@ -56,7 +56,7 @@ CompilerRef CompilerFind() {
         }
         return NULL;
     #else
-        #error "Compiler only works on macOS!"
+        #error "Compiler supports the macOS target only"
     #endif
 #elif __linux__
         if (_file_exists(GCC_PATH)) {
@@ -67,9 +67,11 @@ CompilerRef CompilerFind() {
         }
         return NULL;
 #elif __unix__
-
+        return NULL;
 #elif defined(_POSIX_VERSION)
-    #error "Unsupported operating system!"
+        return NULL;
+#else
+    #error "Unsupported operating system"
 #endif
 }
 
@@ -152,5 +154,6 @@ void CompilerCompile(CompilerRef compiler, char *source, char* output) {
     wait(&status);
 
     // TODO Check status
+
 #endif
 }

@@ -3,6 +3,13 @@ project(germanoc)
 
 set(CMAKE_C_STANDARD 99)
 
+#############
+# ARGTABLE3 #
+#############
+
+add_subdirectory(argtable3)
+include_directories(argtable3)
+
 #######
 # MPC #
 #######
@@ -53,4 +60,4 @@ add_executable(germanoc main.c parser.c parser.h codegen.c codegen.h )
 
 llvm_map_components_to_libnames(LLVM_LIBS core executionengine mcjit interpreter analysis native bitwriter)
 
-target_link_libraries(germanoc ${LLVM_LIBS} ${GLIB_LDFLAGS} mpc compiler)
+target_link_libraries(germanoc ${LLVM_LIBS} ${GLIB_LDFLAGS} mpc compiler argtable3)

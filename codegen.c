@@ -8,6 +8,7 @@
 #include <llvm-c/Analysis.h>
 #include <llvm-c/BitWriter.h>
 
+void _CodegenContextCodegenExpr(CodegenContextRef ctx, mpc_ast_t *node);
 void _CodegenContextCodegenPrintExpr(CodegenContextRef ctx, mpc_ast_t *node);
 
 LLVMTypeRef _printf_type() {
@@ -69,15 +70,19 @@ void CodegenContextCodegen(CodegenContextRef ctx, mpc_val_t *ast) {
 
     while (current_node != NULL) {
         if (g_str_has_prefix(current_node->tag, "expr")) {
-            if (g_str_has_prefix(current_node->tag, "expr|print_expr")) {
-                _CodegenContextCodegenPrintExpr(ctx, current_node);
-            }
+            _CodegenContextCodegenExpr(ctx, current_node);
         }
         current_node = mpc_ast_traverse_next(&trav);
     }
 
     mpc_ast_traverse_free(&trav);
 
+}
+
+void _CodegenContextCodegenExpr(CodegenContextRef ctx, mpc_ast_t *node) {
+    if (g_str_has_prefix(node->tag, "expr|print_expr")) {
+        _CodegenContextCodegenPrintExpr(ctx, node);
+    }
 }
 
 void _CodegenContextCodegenPrintExpr(CodegenContextRef ctx, mpc_ast_t *node) {
@@ -136,8 +141,11 @@ void CodegenContextOutputASM(CodegenContextRef ctx, FILE *file) {
     if (LLVMGetTargetFromTriple(triple, &target, &error)) {
         fprintf(stderr, "Could not get native target: %s.\n", error);
         LLVMDisposeMessage(error);
+        LLVMDisposeMessage(triple);
         return;
     }
+
+    LLVMDisposeMessage(triple);
 
     LLVMTargetMachineRef target_machine =
         LLVMCreateTargetMachine(
