@@ -54,6 +54,7 @@ include_directories(${GLIB_INCLUDE_DIRS})
 ##########
 
 include_directories(include)
+add_subdirectory(include)
 add_subdirectory(src)
 
 add_definitions(-DVERSION="0.1")

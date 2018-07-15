@@ -1,7 +1,7 @@
 
-#include "../include/parser.h"
+#include "parser.h"
 
-#include "../include/ast.h"
+#include "ast.h"
 
 struct Tuple {
     gpointer one;

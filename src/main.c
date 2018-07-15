@@ -1,9 +1,12 @@
-#include "../include/codegen.h"
-#include "../include/parser.h"
+#include "codegen.h"
+#include "parser.h"
 
 #include <compiler.h>
 #include <argtable3.h>
-#include "../include/ast.h"
+
+#include <unistd.h>
+
+#include "ast.h"
 
 struct arg_lit *verbose, *help;
 struct arg_file *output, *file;
@@ -99,6 +102,8 @@ int main(int argc, char *argv[]) {
         fclose(source_f);
 
         CompilerCompile(compiler, source, (char *) *output->filename);
+
+        unlink(source);
         g_free(source);
 
         CompilerDelete(compiler);
