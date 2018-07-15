@@ -20,21 +20,25 @@ int main(int argc, char *argv[]) {
     void *argtable[] = {
             help    = arg_litn(NULL, "help", 0, 1, "Display this help and exit"),
             verbose = arg_litn(NULL, "verbose", 0, 1, "Be verbose"),
-            output  = arg_filen("o", "output", "outfile", 0, 1, "Output file"),
-            file    = arg_filen(NULL, NULL, "<FILE>", 0, 1, "Input file"),
+            output  = arg_filen("o", "output", "outfile", 1, 1, "Output file"),
+            file    = arg_filen(NULL, NULL, "<FILE>", 1, 1, "Input file"),
             end     = arg_end(20),
     };
 
     int nerrors;
     nerrors = arg_parse(argc,argv,argtable);
 
-    int should_quit_after_header = 0;
+    printf("MosconiLang Compiler v" VERSION ".\n");
+    gchar** authors = g_strsplit(AUTHORS, "|", 2);
+    for (gchar **ptr = authors; *ptr; ptr++) {
+        printf("Author: %s.\n", *ptr);
+    }
+    printf("\n");
 
     if (help->count > 0)
     {
         printf("Usage: germanoc");
         arg_print_syntax(stdout, argtable, "\n");
-        printf("MosconiLang compiler.\n\n");
         arg_print_glossary(stdout, argtable, "  %-25s %s\n");
         arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
         return EXIT_SUCCESS;
@@ -46,17 +50,6 @@ int main(int argc, char *argv[]) {
         arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
         return EXIT_FAILURE;
     }
-
-    ////////////
-    // Header //
-    ////////////
-
-    printf("MosconiLang Compiler v" VERSION ".\n");
-    gchar** authors = g_strsplit(AUTHORS, "|", 2);
-    for (gchar **ptr = authors; *ptr; ptr++) {
-        printf("Author: %s.\n", *ptr);
-    }
-    printf("\n");
 
     ///////////////////////
     // Parser combinator //
