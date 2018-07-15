@@ -4,6 +4,8 @@
 
 #include <glib.h>
 
+#include <mpc.h>
+
 typedef enum {
     AST_EXPR_TYPE_PRINT_LITERAL,
     AST_EXPR_TYPE_PRINT_ID,
@@ -11,6 +13,7 @@ typedef enum {
 } ASTExprType;
 
 struct ASTExpr{
+    mpc_state_t *state;
     ASTExprType type;
     void *data;
 };

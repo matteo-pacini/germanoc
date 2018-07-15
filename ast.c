@@ -53,7 +53,7 @@ void ASTExprDelete(ASTExprRef expr) {
                 free(data);
             }
         }
-
+        if (expr->state) free(expr->state);
         free(expr);
     }
 

@@ -3,6 +3,27 @@
 
 #include "ast.h"
 
+struct Tuple {
+    gpointer one;
+    gpointer two;
+};
+
+typedef struct Tuple  Tuple;
+typedef struct Tuple* TupleRef;
+
+TupleRef TupleCreate(gpointer one, gpointer two) {
+    TupleRef t = g_new0(Tuple, 1);
+    t->one = one;
+    t->two = two;
+    return t;
+}
+
+void TupleDelete(TupleRef tuple) {
+    if (tuple) {
+        free(tuple);
+    }
+}
+
 /////////////////
 // DestroyFunc //
 /////////////////
@@ -30,25 +51,42 @@ static mpc_val_t *mpcf_ast_expr_garray(int n, mpc_val_t **xs) {
 }
 
 static mpc_val_t *mpcf_var_decl(int n, mpc_val_t **xs) {
-    gchar *identifier = xs[2];
-    gint32 value = *((gint32*)xs[4]);
-    return ASTExprCreateVarDecl(identifier, value);
+    mpc_state_t* state = xs[2];
+    gchar *identifier = xs[3];
+    gint32 value = *((gint32*)xs[5]);
+    ASTExprRef node = ASTExprCreateVarDecl(identifier, value);
+    node->state = state;
+    return node;
+}
+
+static mpc_val_t *mpcf_print_expr(int n, mpc_val_t **xs) {
+
+    gchar* input = xs[3];
+    mpc_state_t* state = xs[2];
+
+    if (*input == '"') /* string literal */ {
+
+        gchar *cleaned_input = g_malloc0(sizeof(gchar) * (strlen(input)-1));
+        strncpy(cleaned_input, input+1, strlen(input)-2);
+
+        ASTExprRef node = ASTExprCreatePrintLiteral(cleaned_input);
+        node->state = state;
+        free(input);
+        return node;
+    }
+
+    /* identifier */
+
+    ASTExprRef node = ASTExprCreatePrintIdentifier(input);
+    node->state = state;
+    free(input);
+    return node;
+
 }
 
 ///////////
 // Apply //
 ///////////
-
-static mpc_val_t *mpc_to_print_expr(mpc_val_t* input) {
-    const gchar *value = input;
-    if (*value == '"') {
-        gchar *cleaned_input = g_malloc0(sizeof(gchar) * (strlen(input)-1));
-        strncpy(cleaned_input, input+1, strlen(input)-2);
-        free(input);
-        return ASTExprCreatePrintLiteral(cleaned_input);
-    }
-    return ASTExprCreatePrintIdentifier(input);
-}
 
 static mpc_val_t *mpc_string_hack(mpc_val_t* input) {
     gchar *result = g_strdup_printf("\"%s\"", (char *) input);
@@ -92,30 +130,32 @@ ParserRef ParserCreate() {
 
     // print_expr : "METTI UN" ("A"|"O") (<string>|<identifier>)
     mpc_define(print_expr,
-        mpc_apply(
-            mpc_and(
-                3,
-                mpcf_trd,
-                mpc_string("METTI UN"),
-                mpc_tok(mpc_maybe(mpc_or(2, mpc_char('A'), mpc_char('O')))),
-                mpc_tok(mpc_or(2, string, identifier)),
-                free,
-                free
-            ),
-            mpc_to_print_expr
+        mpc_and(
+            4,
+            mpcf_print_expr,
+            mpc_string("METTI UN"),
+            mpc_tok(mpc_maybe(mpc_or(2, mpc_char('A'), mpc_char('O')))),
+            mpc_state(),
+            mpc_tok(mpc_or(2, string, identifier)),
+            free,
+            free,
+            free
         )
+
     );
 
     // var_decl_expr : "MA COS'E' ST" ("A"|"O") <identifier> ? <integer>
     mpc_define(var_decl_expr,
         mpc_and(
-            5,
+            6,
             mpcf_var_decl,
             mpc_string("MA COS'E' ST"),
             mpc_tok(mpc_or(2, mpc_char('A'), mpc_char('O'))),
+            mpc_state(),
             mpc_tok(identifier),
             mpc_tok(mpc_char('?')),
             mpc_tok(integer),
+            free,
             free,
             free,
             free,

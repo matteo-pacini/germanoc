@@ -5,6 +5,7 @@
 #include <llvm-c/Target.h>
 #include <llvm-c/Analysis.h>
 #include <llvm-c/BitWriter.h>
+#include <llvm-c/Transforms/Scalar.h>
 
 #include <mpc.h>
 
@@ -142,7 +143,10 @@ void _CodegenContextCodegenPrintIdentifier(CodegenContextRef ctx, ASTExprRef exp
     LLVMValueRef alloca = g_hash_table_lookup(ctx->vars, expr->data);
 
     if (!alloca) {
-        fprintf(stderr, "[ERROR] Variable \"%s\" is not defined.\n", (char *) expr->data);
+        fprintf(stderr, "[ERROR][%ld:%ld] Variable \"%s\" is not defined.\n",
+                expr->state->row+1,
+                expr->state->col+1,
+                (char *) expr->data);
         exit(EXIT_FAILURE);
     }
 
@@ -165,7 +169,10 @@ void _CodegenContextCodegenVarDecl(CodegenContextRef ctx, ASTExprRef expr) {
     ASTVarDeclRef data = expr->data;
 
     if (g_hash_table_lookup(ctx->vars, data->name)) {
-        fprintf(stderr, "[ERROR] Variable \"%s\" is already defined.\n", data->name);
+        fprintf(stderr, "[ERROR][%ld:%ld] Variable \"%s\" is already defined.\n",
+                expr->state->row+1,
+                expr->state->col+1,
+                data->name);
         exit(EXIT_FAILURE);
     }
 
@@ -225,6 +232,17 @@ void CodegenContextOutputASM(CodegenContextRef ctx, FILE *file) {
                 LLVMRelocPIC,
                 LLVMCodeModelDefault
         );
+
+    LLVMPassManagerRef pass = LLVMCreatePassManager();
+
+    LLVMAddConstantPropagationPass(pass);
+    LLVMAddInstructionCombiningPass(pass);
+    LLVMAddPromoteMemoryToRegisterPass(pass);
+    LLVMAddGVNPass(pass);
+    LLVMAddCFGSimplificationPass(pass);
+
+    LLVMRunPassManager(pass, ctx->module);
+    LLVMDisposePassManager(pass);
 
     LLVMMemoryBufferRef buffer;
     LLVMTargetMachineEmitToMemoryBuffer(target_machine, ctx->module, LLVMAssemblyFile, &error, &buffer);
