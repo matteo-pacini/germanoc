@@ -15,6 +15,7 @@ void _CodegenContextCodegenExpr(CodegenContextRef ctx, ASTExprRef expr);
 void _CodegenContextCodegenPrintExpr(CodegenContextRef ctx, ASTExprRef expr);
 void _CodegenContextCodegenPrintIdentifier(CodegenContextRef ctx, ASTExprRef expr);
 void _CodegenContextCodegenVarDecl(CodegenContextRef ctx, ASTExprRef expr);
+void _CodegenContextCodegenReadInt(CodegenContextRef ctx, ASTExprRef expr);
 
 LLVMTypeRef _printf_type() {
     LLVMTypeRef args[] = {
@@ -52,6 +53,7 @@ CodegenContextRef CodegenContextCreate() {
     ctx->module = LLVMModuleCreateWithName("mosconilang");
 
     ctx->printf_fn = LLVMAddFunction(ctx->module, "printf", _printf_type());
+    ctx->scanf_fn = LLVMAddFunction(ctx->module, "scanf", _printf_type());
     ctx->main_fn = LLVMAddFunction(ctx->module, "main", _main_type());
 
     LLVMBasicBlockRef entrypoint = LLVMAppendBasicBlock(ctx->main_fn, "entrypoint");
@@ -61,6 +63,7 @@ CodegenContextRef CodegenContextCreate() {
 
     ctx->printf_str_fmt = LLVMBuildGlobalStringPtr(ctx->builder, "%s\n", "printf_str_fmt");
     ctx->printf_int_fmt = LLVMBuildGlobalStringPtr(ctx->builder, "%d\n", "printf_int_fmt");
+    ctx->scanf_read_int_fmt = LLVMBuildGlobalStringPtr(ctx->builder, "%d", "scanf_read_int_fmt");
 
     ctx->vars = g_hash_table_new_full(g_str_hash, g_str_equal, free, NULL);
 
@@ -109,6 +112,9 @@ void _CodegenContextCodegenExpr(CodegenContextRef ctx, ASTExprRef expr) {
             break;
         case AST_EXPR_TYPE_PRINT_ID:
             _CodegenContextCodegenPrintIdentifier(ctx, expr);
+            break;
+        case AST_EXPR_TYPE_READ_INT:
+            _CodegenContextCodegenReadInt(ctx, expr);
             break;
     }
 
@@ -182,6 +188,31 @@ void _CodegenContextCodegenVarDecl(CodegenContextRef ctx, ASTExprRef expr) {
 
     g_hash_table_insert(ctx->vars, strdup(data->name), alloca);
 
+}
+
+void _CodegenContextCodegenReadInt(CodegenContextRef ctx, ASTExprRef expr) {
+
+    g_assert(ctx != NULL);
+    g_assert(expr != NULL);
+
+    LLVMValueRef alloca = g_hash_table_lookup(ctx->vars, expr->data);
+
+    if (!alloca) {
+        fprintf(stderr, "[ERROR][%ld:%ld] Variable \"%s\" is not defined.\n",
+                expr->state->row+1,
+                expr->state->col+1,
+                (char *) expr->data);
+        exit(EXIT_FAILURE);
+    }
+
+    LLVMValueRef scanf_args[] = { ctx->scanf_read_int_fmt, alloca };
+    LLVMBuildCall(
+            ctx->builder,
+            ctx->scanf_fn,
+            scanf_args,
+            2,
+            ""
+    );
 }
 
 void CodegenContextAddRet(CodegenContextRef ctx) {

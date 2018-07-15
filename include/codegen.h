@@ -11,8 +11,10 @@ struct CodegenContext {
     LLVMModuleRef module;
     LLVMValueRef printf_fn;
     LLVMValueRef main_fn;
+    LLVMValueRef scanf_fn;
     LLVMValueRef printf_str_fmt;
     LLVMValueRef printf_int_fmt;
+    LLVMValueRef scanf_read_int_fmt;
     LLVMBuilderRef builder;
     GHashTable *vars;
 };

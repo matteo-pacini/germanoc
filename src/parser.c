@@ -3,27 +3,6 @@
 
 #include "ast.h"
 
-struct Tuple {
-    gpointer one;
-    gpointer two;
-};
-
-typedef struct Tuple  Tuple;
-typedef struct Tuple* TupleRef;
-
-TupleRef TupleCreate(gpointer one, gpointer two) {
-    TupleRef t = g_new0(Tuple, 1);
-    t->one = one;
-    t->two = two;
-    return t;
-}
-
-void TupleDelete(TupleRef tuple) {
-    if (tuple) {
-        free(tuple);
-    }
-}
-
 /////////////////
 // DestroyFunc //
 /////////////////
@@ -51,12 +30,29 @@ static mpc_val_t *mpcf_ast_expr_garray(int n, mpc_val_t **xs) {
 }
 
 static mpc_val_t *mpcf_var_decl(int n, mpc_val_t **xs) {
+
     mpc_state_t* state = xs[2];
     gchar *identifier = xs[3];
     gint32 value = *((gint32*)xs[5]);
+
     ASTExprRef node = ASTExprCreateVarDecl(identifier, value);
     node->state = state;
+    free(identifier);
+
     return node;
+
+}
+
+static mpc_val_t *mpcf_read_int(int n, mpc_val_t **xs) {
+
+    mpc_state_t* state = xs[1];
+    gchar *identifier = xs[2];
+
+    ASTExprRef node = ASTExprCreateReadInt(identifier);
+    free(identifier);
+    node->state = state;
+    return node;
+
 }
 
 static mpc_val_t *mpcf_print_expr(int n, mpc_val_t **xs) {
@@ -111,6 +107,7 @@ ParserRef ParserCreate() {
     mpc_parser_t * identifier = mpc_new("identifier");
     mpc_parser_t * print_expr = mpc_new("print_expr");
     mpc_parser_t * var_decl_expr = mpc_new("var_decl_expr");
+    mpc_parser_t * read_int_expr = mpc_new("read_int_expr");
     mpc_parser_t * expr = mpc_new("expr");
     mpc_parser_t * mosconilang = mpc_new("mosconilang");
 
@@ -118,7 +115,7 @@ ParserRef ParserCreate() {
     mpc_define(string,
         mpc_apply(
              mpc_string_lit(),
-             mpc_string_hack
+             mpc_string_hack // put the quotes back
         )
     );
 
@@ -163,12 +160,26 @@ ParserRef ParserCreate() {
         )
     );
 
-    // expr: <print_expr>
+    // read_int_expr : DAMME CAMPO LUNGO SU <identifier>
+    mpc_define(read_int_expr,
+        mpc_and(
+           3,
+           mpcf_read_int,
+           mpc_tok(mpc_string("DAMME CAMPO LUNGO SU")),
+           mpc_state(),
+           mpc_tok(identifier),
+           free,
+           free
+        )
+    );
+
+    // expr: <print_expr> | <var_decl_expr> | <read_int_expr>
     mpc_define(expr,
         mpc_or(
-            2,
+            3,
             print_expr,
-            var_decl_expr
+            var_decl_expr,
+            read_int_expr
         )
     );
 
@@ -199,6 +210,7 @@ ParserRef ParserCreate() {
     g_ptr_array_add(parser->_subparsers, integer);
     g_ptr_array_add(parser->_subparsers, identifier);
     g_ptr_array_add(parser->_subparsers, var_decl_expr);
+    g_ptr_array_add(parser->_subparsers, read_int_expr);
 
     return parser;
 
