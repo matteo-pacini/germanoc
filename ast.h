@@ -6,6 +6,7 @@
 
 typedef enum {
     AST_EXPR_TYPE_PRINT_LITERAL,
+    AST_EXPR_TYPE_PRINT_ID,
     AST_EXPR_TYPE_VAR_DECL
 } ASTExprType;
 
@@ -26,6 +27,7 @@ typedef struct ASTVarDecl  ASTVarDecl;
 typedef struct ASTVarDecl* ASTVarDeclRef;
 
 ASTExprRef ASTExprCreatePrintLiteral(const gchar *str);
+ASTExprRef ASTExprCreatePrintIdentifier(const gchar *ident);
 ASTExprRef ASTExprCreateVarDecl(const gchar *name, gint32 value);
 void       ASTExprDelete(ASTExprRef expr);
 

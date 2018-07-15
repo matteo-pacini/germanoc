@@ -12,6 +12,7 @@
 
 void _CodegenContextCodegenExpr(CodegenContextRef ctx, ASTExprRef expr);
 void _CodegenContextCodegenPrintExpr(CodegenContextRef ctx, ASTExprRef expr);
+void _CodegenContextCodegenPrintIdentifier(CodegenContextRef ctx, ASTExprRef expr);
 void _CodegenContextCodegenVarDecl(CodegenContextRef ctx, ASTExprRef expr);
 
 LLVMTypeRef _printf_type() {
@@ -58,6 +59,7 @@ CodegenContextRef CodegenContextCreate() {
     LLVMPositionBuilderAtEnd(ctx->builder, entrypoint);
 
     ctx->printf_str_fmt = LLVMBuildGlobalStringPtr(ctx->builder, "%s\n", "printf_str_fmt");
+    ctx->printf_int_fmt = LLVMBuildGlobalStringPtr(ctx->builder, "%d\n", "printf_int_fmt");
 
     ctx->vars = g_hash_table_new_full(g_str_hash, g_str_equal, free, NULL);
 
@@ -104,6 +106,9 @@ void _CodegenContextCodegenExpr(CodegenContextRef ctx, ASTExprRef expr) {
         case AST_EXPR_TYPE_VAR_DECL:
             _CodegenContextCodegenVarDecl(ctx, expr);
             break;
+        case AST_EXPR_TYPE_PRINT_ID:
+            _CodegenContextCodegenPrintIdentifier(ctx, expr);
+            break;
     }
 
 }
@@ -127,6 +132,29 @@ void _CodegenContextCodegenPrintExpr(CodegenContextRef ctx, ASTExprRef expr) {
           ""
     );
 
+}
+
+void _CodegenContextCodegenPrintIdentifier(CodegenContextRef ctx, ASTExprRef expr) {
+
+    g_assert(ctx != NULL);
+    g_assert(expr != NULL);
+
+    LLVMValueRef alloca = g_hash_table_lookup(ctx->vars, expr->data);
+
+    if (!alloca) {
+        fprintf(stderr, "[ERROR] Variable \"%s\" is not defined.\n", (char *) expr->data);
+        exit(EXIT_FAILURE);
+    }
+
+    LLVMValueRef load = LLVMBuildLoad(ctx->builder, alloca, "");
+    LLVMValueRef printf_args[] = { ctx->printf_int_fmt, load };
+    LLVMBuildCall(
+            ctx->builder,
+            ctx->printf_fn,
+            printf_args,
+            2,
+            ""
+    );
 }
 
 void _CodegenContextCodegenVarDecl(CodegenContextRef ctx, ASTExprRef expr) {

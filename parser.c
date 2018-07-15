@@ -40,7 +40,20 @@ static mpc_val_t *mpcf_var_decl(int n, mpc_val_t **xs) {
 ///////////
 
 static mpc_val_t *mpc_to_print_expr(mpc_val_t* input) {
-    return ASTExprCreatePrintLiteral(input);
+    const gchar *value = input;
+    if (*value == '"') {
+        gchar *cleaned_input = g_malloc0(sizeof(gchar) * (strlen(input)-1));
+        strncpy(cleaned_input, input+1, strlen(input)-2);
+        free(input);
+        return ASTExprCreatePrintLiteral(cleaned_input);
+    }
+    return ASTExprCreatePrintIdentifier(input);
+}
+
+static mpc_val_t *mpc_string_hack(mpc_val_t* input) {
+    gchar *result = g_strdup_printf("\"%s\"", (char *) input);
+    free(input);
+    return result;
 }
 
 //////////
@@ -66,8 +79,8 @@ ParserRef ParserCreate() {
     // string: string_literal (built-in)
     mpc_define(string,
         mpc_apply(
-            mpc_string_lit(),
-            mpcf_unescape
+             mpc_string_lit(),
+             mpc_string_hack
         )
     );
 
@@ -77,7 +90,7 @@ ParserRef ParserCreate() {
     // identifier: identifier (built-in)
     mpc_define(identifier, mpc_ident());
 
-    // print_expr : "METTI UN" ("A"|"O") <string>
+    // print_expr : "METTI UN" ("A"|"O") (<string>|<identifier>)
     mpc_define(print_expr,
         mpc_apply(
             mpc_and(
@@ -85,7 +98,7 @@ ParserRef ParserCreate() {
                 mpcf_trd,
                 mpc_string("METTI UN"),
                 mpc_tok(mpc_maybe(mpc_or(2, mpc_char('A'), mpc_char('O')))),
-                mpc_tok(string),
+                mpc_tok(mpc_or(2, string, identifier)),
                 free,
                 free
             ),
