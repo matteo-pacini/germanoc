@@ -29,6 +29,12 @@ static mpc_val_t *mpcf_ast_expr_garray(int n, mpc_val_t **xs) {
     return array;
 }
 
+static mpc_val_t *mpcf_var_decl(int n, mpc_val_t **xs) {
+    gchar *identifier = xs[2];
+    gint32 value = *((gint32*)xs[4]);
+    return ASTExprCreateVarDecl(identifier, value);
+}
+
 ///////////
 // Apply //
 ///////////
@@ -50,17 +56,26 @@ ParserRef ParserCreate() {
     ParserRef parser = g_new0(Parser, 1);
 
     mpc_parser_t * string = mpc_new("string");
+    mpc_parser_t * integer = mpc_new("integer");
+    mpc_parser_t * identifier = mpc_new("identifier");
     mpc_parser_t * print_expr = mpc_new("print_expr");
+    mpc_parser_t * var_decl_expr = mpc_new("var_decl_expr");
     mpc_parser_t * expr = mpc_new("expr");
     mpc_parser_t * mosconilang = mpc_new("mosconilang");
 
-    // string: string_literal
+    // string: string_literal (built-in)
     mpc_define(string,
         mpc_apply(
             mpc_string_lit(),
             mpcf_unescape
         )
     );
+
+    // integer: integer_literal (built-in)
+    mpc_define(integer, mpc_int());
+
+    // identifier: identifier (built-in)
+    mpc_define(identifier, mpc_ident());
 
     // print_expr : "METTI UN" ("A"|"O") <string>
     mpc_define(print_expr,
@@ -78,11 +93,29 @@ ParserRef ParserCreate() {
         )
     );
 
+    // var_decl_expr : "MA COS'E' ST" ("A"|"O") <identifier> ? <integer>
+    mpc_define(var_decl_expr,
+        mpc_and(
+            5,
+            mpcf_var_decl,
+            mpc_string("MA COS'E' ST"),
+            mpc_tok(mpc_or(2, mpc_char('A'), mpc_char('O'))),
+            mpc_tok(identifier),
+            mpc_tok(mpc_char('?')),
+            mpc_tok(integer),
+            free,
+            free,
+            free,
+            free
+        )
+    );
+
     // expr: <print_expr>
     mpc_define(expr,
         mpc_or(
-            1,
-            print_expr
+            2,
+            print_expr,
+            var_decl_expr
         )
     );
 
@@ -110,6 +143,9 @@ ParserRef ParserCreate() {
     g_ptr_array_add(parser->_subparsers, expr);
     g_ptr_array_add(parser->_subparsers, print_expr);
     g_ptr_array_add(parser->_subparsers, string);
+    g_ptr_array_add(parser->_subparsers, integer);
+    g_ptr_array_add(parser->_subparsers, identifier);
+    g_ptr_array_add(parser->_subparsers, var_decl_expr);
 
     return parser;
 

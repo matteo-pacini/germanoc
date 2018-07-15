@@ -12,6 +12,7 @@
 
 void _CodegenContextCodegenExpr(CodegenContextRef ctx, ASTExprRef expr);
 void _CodegenContextCodegenPrintExpr(CodegenContextRef ctx, ASTExprRef expr);
+void _CodegenContextCodegenVarDecl(CodegenContextRef ctx, ASTExprRef expr);
 
 LLVMTypeRef _printf_type() {
     LLVMTypeRef args[] = {
@@ -58,17 +59,21 @@ CodegenContextRef CodegenContextCreate() {
 
     ctx->printf_str_fmt = LLVMBuildGlobalStringPtr(ctx->builder, "%s\n", "printf_str_fmt");
 
+    ctx->vars = g_hash_table_new_full(g_str_hash, g_str_equal, free, NULL);
+
     return ctx;
 
 }
 
 void CodegenContextDelete(CodegenContextRef ctx) {
 
-    g_assert(ctx != NULL);
-
     if (ctx) {
         if (ctx->builder) LLVMDisposeBuilder(ctx->builder);
         if (ctx->module) LLVMDisposeModule(ctx->module);
+        if (ctx->vars) {
+            g_hash_table_remove_all(ctx->vars);
+            g_hash_table_destroy(ctx->vars);
+        };
         g_free(ctx);
     }
 
@@ -91,7 +96,15 @@ void _CodegenContextCodegenExpr(CodegenContextRef ctx, ASTExprRef expr) {
     g_assert(ctx != NULL);
     g_assert(expr != NULL);
 
-    _CodegenContextCodegenPrintExpr(ctx, expr);
+    switch (expr->type) {
+
+        case AST_EXPR_TYPE_PRINT_LITERAL:
+            _CodegenContextCodegenPrintExpr(ctx, expr);
+            break;
+        case AST_EXPR_TYPE_VAR_DECL:
+            _CodegenContextCodegenVarDecl(ctx, expr);
+            break;
+    }
 
 }
 
@@ -113,6 +126,26 @@ void _CodegenContextCodegenPrintExpr(CodegenContextRef ctx, ASTExprRef expr) {
           2,
           ""
     );
+
+}
+
+void _CodegenContextCodegenVarDecl(CodegenContextRef ctx, ASTExprRef expr) {
+
+    g_assert(ctx != NULL);
+    g_assert(expr != NULL);
+
+    ASTVarDeclRef data = expr->data;
+
+    if (g_hash_table_lookup(ctx->vars, data->name)) {
+        fprintf(stderr, "[ERROR] Variable \"%s\" is already defined.\n", data->name);
+        exit(EXIT_FAILURE);
+    }
+
+    LLVMValueRef alloca = LLVMBuildAlloca(ctx->builder, LLVMInt32Type(), data->name);
+    LLVMValueRef value = LLVMConstInt(LLVMInt32Type(), (unsigned long long int) data->value, 0);
+    LLVMBuildStore(ctx->builder, value, alloca);
+
+    g_hash_table_insert(ctx->vars, strdup(data->name), alloca);
 
 }
 
