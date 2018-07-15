@@ -1,4 +1,4 @@
-#include "ast.h"
+#include "../include/ast.h"
 
 ASTExprRef ASTExprCreatePrintLiteral(const gchar *str) {
 

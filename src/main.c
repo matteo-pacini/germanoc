@@ -1,9 +1,9 @@
-#include "codegen.h"
-#include "parser.h"
+#include "../include/codegen.h"
+#include "../include/parser.h"
 
 #include <compiler.h>
 #include <argtable3.h>
-#include "ast.h"
+#include "../include/ast.h"
 
 struct arg_lit *verbose, *help;
 struct arg_file *output, *file;

@@ -53,11 +53,14 @@ include_directories(${GLIB_INCLUDE_DIRS})
 # TARGET #
 ##########
 
+include_directories(include)
+add_subdirectory(src)
+
 add_definitions(-DVERSION="0.1")
 add_definitions(-DAUTHORS="Matteo Pacini <m@matteopacini.me>|Andrea Proietto <>")
 
-add_executable(germanoc main.c parser.c parser.h codegen.c codegen.h ast.c ast.h)
+add_executable(germanoc ${SOURCES})
 
-llvm_map_components_to_libnames(LLVM_LIBS core executionengine mcjit interpreter analysis native bitwriter)
+llvm_map_components_to_libnames(LLVM_LIBS core native bitwriter)
 
 target_link_libraries(germanoc ${LLVM_LIBS} ${GLIB_LDFLAGS} mpc compiler argtable3)

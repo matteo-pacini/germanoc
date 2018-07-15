@@ -1,5 +1,5 @@
 
-#include "codegen.h"
+#include "../include/codegen.h"
 
 #include <llvm-c/ExecutionEngine.h>
 #include <llvm-c/Target.h>
@@ -9,7 +9,7 @@
 
 #include <mpc.h>
 
-#include "ast.h"
+#include "../include/ast.h"
 
 void _CodegenContextCodegenExpr(CodegenContextRef ctx, ASTExprRef expr);
 void _CodegenContextCodegenPrintExpr(CodegenContextRef ctx, ASTExprRef expr);
