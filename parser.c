@@ -1,25 +1,31 @@
 
 #include "parser.h"
 
-#include <mpc.h>
-
 #include "ast.h"
 
-//////////
-// Fold //
-//////////
+/////////////////
+// DestroyFunc //
+/////////////////
+
+static void _garray_mpc_parser_t_free(gpointer data) {
+    mpc_undefine(data);
+    mpc_delete(data);
+}
 
 static void _garray_astexpr_free(gpointer data) {
     ASTExprDelete(data);
 }
 
+//////////
+// Fold //
+//////////
+
 static mpc_val_t *mpcf_ast_expr_garray(int n, mpc_val_t **xs) {
-    GArray *array = g_array_new(FALSE, FALSE, sizeof(ASTExpr*));
+    GPtrArray *array = g_ptr_array_new_with_free_func(_garray_astexpr_free);
     for (int i=0; i<n; i++) {
         ASTExpr *current = xs[i];
-        g_array_append_val(array, current);
+        g_ptr_array_add(array, current);
     }
-    g_array_set_clear_func(array, _garray_astexpr_free);
     return array;
 }
 
@@ -36,7 +42,7 @@ static mpc_val_t *mpc_to_print_expr(mpc_val_t* input) {
 //////////
 
 static void mpc_dtor_garray(mpc_val_t *val) {
-    g_array_free(val, FALSE);
+    g_ptr_array_free(val, FALSE);
 }
 
 ParserRef ParserCreate() {
@@ -100,10 +106,10 @@ ParserRef ParserCreate() {
 
     parser->_parser = mosconilang;
 
-    parser->_subparsers = g_array_new(FALSE, FALSE, sizeof(mpc_parser_t*));
-    g_array_append_val(parser->_subparsers, expr);
-    g_array_append_val(parser->_subparsers, print_expr);
-    g_array_append_val(parser->_subparsers, string);
+    parser->_subparsers = g_ptr_array_new_with_free_func(_garray_mpc_parser_t_free);
+    g_ptr_array_add(parser->_subparsers, expr);
+    g_ptr_array_add(parser->_subparsers, print_expr);
+    g_ptr_array_add(parser->_subparsers, string);
 
     return parser;
 
@@ -111,15 +117,19 @@ ParserRef ParserCreate() {
 
 void ParserDelete(ParserRef parser) {
     if (parser) {
-        if (parser->_parser) mpc_delete(parser->_parser);
-        if (parser->_subparsers) {
-            for(int i=0; i<parser->_subparsers->len; i++) {
-                mpc_delete(g_array_index(parser->_subparsers, mpc_parser_t*, i));
-            }
-            g_array_free(parser->_subparsers, FALSE);
+        if (parser->_parser) {
+            mpc_undefine(parser->_parser);
+            mpc_delete(parser->_parser);
         }
-        if (parser->output) g_array_free(parser->output, TRUE);
-        if (parser->error) mpc_err_delete(parser->error);
+        if (parser->_subparsers) {
+            g_ptr_array_free(parser->_subparsers, TRUE);
+        }
+        if (parser->output) {
+            g_ptr_array_free(parser->output, TRUE);
+        }
+        if (parser->error) {
+            mpc_err_delete(parser->error);
+        }
         g_free(parser);
     }
 }

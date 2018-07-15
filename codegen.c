@@ -74,13 +74,13 @@ void CodegenContextDelete(CodegenContextRef ctx) {
 
 }
 
-void CodegenContextCodegen(CodegenContextRef ctx, GArray *exprs) {
+void CodegenContextCodegen(CodegenContextRef ctx, GPtrArray *exprs) {
 
     g_assert(ctx != NULL);
     g_assert(exprs != NULL);
 
     for (int i=0; i<exprs->len; i++) {
-        ASTExpr *expr = g_array_index(exprs, ASTExpr*, i);
+        ASTExpr *expr = g_ptr_array_index(exprs, i);
         _CodegenContextCodegenExpr(ctx, expr);
     }
 

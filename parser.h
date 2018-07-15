@@ -7,7 +7,7 @@
 #include <mpc.h>
 
 struct Parser {
-    GArray *_subparsers;
+    GPtrArray *_subparsers;
     mpc_parser_t *_parser;
     mpc_val_t *output;
     mpc_err_t *error;

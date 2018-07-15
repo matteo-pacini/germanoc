@@ -16,7 +16,7 @@ void ASTExprDelete(ASTExprRef expr) {
         if (expr->type == AST_EXPR_TYPE_PRINT_LITERAL && expr->data) {
             free(expr->data);
         }
-        g_free(expr);
+        free(expr);
     }
 
 }
