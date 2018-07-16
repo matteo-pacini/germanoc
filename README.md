@@ -23,14 +23,14 @@ Un linguaggio di programmazione ispirato e dedicato al mitico [Germano Mosconi](
     # Questo e' un commento - this is a comment.
     AMICI IN ASCOLTO, UN CORDIABLE BUONGIORNO
     METTI UN "Hello World!"
-    ANDIAMO DALLA SIGLA DAI
+    ANDIAMO DALLA SIGLA, DAI
     
 ## Dichiarazione variabile - *Declare a variable*
 
     AMICI IN ASCOLTO, UN CORDIALE BUONGIORNO
     MA COS'E' STA idiozia? 10
     METTI UNA idiozia
-    ANDIAMO DALLA SIGLA DAI
+    ANDIAMO DALLA SIGLA, DAI
     
 ## Operazioni su variabili - *Operations on variables*
 
@@ -50,7 +50,7 @@ Un linguaggio di programmazione ispirato e dedicato al mitico [Germano Mosconi](
 
     METTI UN donadoni
 
-    ANDIAMO DALLA SIGLA DAI
+    ANDIAMO DALLA SIGLA, DAI
 
 # Istruzioni - *Instructions*
 
@@ -68,7 +68,7 @@ L'unico tipo dato manipolabile in *MosconiLang* e' un intero a 4-byte.
 
 [`DAMME CAMPO LUNGO SU <ID>`](https://youtu.be/GBACLpkon6Q?t=14m10s) Legge un intero da **stdin** nella variabile **ID** - *Reads an integer from **stdin** into variable **ID***
 
-[`ANDIAMO DALLA SIGLA DAI`](https://youtu.be/IENTp4ZCvR0?t=2m5s) Termina il programma - *End of the program*
+[`ANDIAMO DALLA SIGLA, DAI`](https://youtu.be/IENTp4ZCvR0?t=2m5s) Termina il programma - *End of the program*
 
 ## Modifica variabili - *Modify variables*
 
