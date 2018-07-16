@@ -11,11 +11,20 @@
 
 #include "ast.h"
 
+inline LLVMTypeRef _printf_type();
+inline LLVMTypeRef _main_type();
+
+inline void _CodegenError(mpc_state_t *state, const char *fmt, ...);
+
 void _CodegenContextCodegenExpr(CodegenContextRef ctx, ASTExprRef expr);
-void _CodegenContextCodegenPrintExpr(CodegenContextRef ctx, ASTExprRef expr);
+void _CodegenContextCodegenPrint(CodegenContextRef ctx, ASTExprRef expr);
 void _CodegenContextCodegenPrintIdentifier(CodegenContextRef ctx, ASTExprRef expr);
 void _CodegenContextCodegenVarDecl(CodegenContextRef ctx, ASTExprRef expr);
 void _CodegenContextCodegenReadInt(CodegenContextRef ctx, ASTExprRef expr);
+void _CodegenContextCodegenVarBlock(CodegenContextRef ctx, ASTExprRef expr);
+
+void _CodegenContextCodegenVarBlockAddVar(CodegenContextRef ctx, ASTExprRef expr);
+void _CodegenContextCodegenVarBlockAddInt(CodegenContextRef ctx, ASTExprRef expr);
 
 LLVMTypeRef _printf_type() {
     LLVMTypeRef args[] = {
@@ -24,8 +33,8 @@ LLVMTypeRef _printf_type() {
     return LLVMFunctionType(
             LLVMInt32Type(),
             args,
-            1,
-            1
+            1, //n_args
+            1  //has_varargs
     );
 }
 
@@ -34,9 +43,28 @@ LLVMTypeRef _main_type() {
     return LLVMFunctionType(
             LLVMVoidType(),
             args,
-            0,
-            0
+            0, //n_args
+            0  //has_varargs
     );
+}
+
+void _CodegenError(mpc_state_t *state, const char *fmt, ...) {
+
+    va_list ap;
+    va_start(ap, fmt);
+
+    gchar *head = g_strdup_printf("[ERROR][%ld:%ld] ",
+        state->row+1,
+        state->col+1);
+    gchar *tail = g_strdup_vprintf(fmt, ap);
+
+    va_end(ap);
+
+    fprintf(stderr, "%s%s\n", head, tail);
+
+    g_free(head);
+    g_free(tail);
+
 }
 
 void LLVMInit() {
@@ -105,7 +133,7 @@ void _CodegenContextCodegenExpr(CodegenContextRef ctx, ASTExprRef expr) {
     switch (expr->type) {
 
         case AST_EXPR_TYPE_PRINT_LITERAL:
-            _CodegenContextCodegenPrintExpr(ctx, expr);
+            _CodegenContextCodegenPrint(ctx, expr);
             break;
         case AST_EXPR_TYPE_VAR_DECL:
             _CodegenContextCodegenVarDecl(ctx, expr);
@@ -117,15 +145,15 @@ void _CodegenContextCodegenExpr(CodegenContextRef ctx, ASTExprRef expr) {
             _CodegenContextCodegenReadInt(ctx, expr);
             break;
         case AST_EXPR_TYPE_VAR_EXPR:
-            g_assert("We should never reach this point!");
             break;
         case AST_EXPR_TYPE_VAR_BLOCK_EXPR:
+            _CodegenContextCodegenVarBlock(ctx, expr);
             break;
     }
 
 }
 
-void _CodegenContextCodegenPrintExpr(CodegenContextRef ctx, ASTExprRef expr) {
+void _CodegenContextCodegenPrint(CodegenContextRef ctx, ASTExprRef expr) {
 
     g_assert(ctx != NULL);
     g_assert(expr != NULL);
@@ -135,6 +163,7 @@ void _CodegenContextCodegenPrintExpr(CodegenContextRef ctx, ASTExprRef expr) {
             expr->data,
             ""
     );
+
     LLVMValueRef printf_args[] = { ctx->printf_str_fmt, str };
     LLVMBuildCall(
           ctx->builder,
@@ -154,10 +183,9 @@ void _CodegenContextCodegenPrintIdentifier(CodegenContextRef ctx, ASTExprRef exp
     LLVMValueRef alloca = g_hash_table_lookup(ctx->vars, expr->data);
 
     if (!alloca) {
-        fprintf(stderr, "[ERROR][%ld:%ld] Variable \"%s\" is not defined.\n",
-                expr->state->row+1,
-                expr->state->col+1,
-                (char *) expr->data);
+        _CodegenError(expr->state,
+                      "Variable \"%s\" is not defined.",
+                      (char *) expr->data);
         exit(EXIT_FAILURE);
     }
 
@@ -180,10 +208,9 @@ void _CodegenContextCodegenVarDecl(CodegenContextRef ctx, ASTExprRef expr) {
     ASTVarDeclRef data = expr->data;
 
     if (g_hash_table_lookup(ctx->vars, data->name)) {
-        fprintf(stderr, "[ERROR][%ld:%ld] Variable \"%s\" is already defined.\n",
-                expr->state->row+1,
-                expr->state->col+1,
-                data->name);
+        _CodegenError(expr->state,
+                      "Variable \"%s\" is already defined",
+                      data->name);
         exit(EXIT_FAILURE);
     }
 
@@ -203,10 +230,9 @@ void _CodegenContextCodegenReadInt(CodegenContextRef ctx, ASTExprRef expr) {
     LLVMValueRef alloca = g_hash_table_lookup(ctx->vars, expr->data);
 
     if (!alloca) {
-        fprintf(stderr, "[ERROR][%ld:%ld] Variable \"%s\" is not defined.\n",
-                expr->state->row+1,
-                expr->state->col+1,
-                (char *) expr->data);
+        _CodegenError(expr->state,
+                      "Variable \"%s\" is not defined",
+                      (char *) expr->data);
         exit(EXIT_FAILURE);
     }
 
@@ -220,10 +246,90 @@ void _CodegenContextCodegenReadInt(CodegenContextRef ctx, ASTExprRef expr) {
     );
 }
 
+void _CodegenContextCodegenVarBlock(CodegenContextRef ctx, ASTExprRef expr) {
+
+    g_assert(ctx != NULL);
+    g_assert(expr != NULL);
+
+    ASTVarBlockExprRef block = expr->data;
+    LLVMValueRef alloca = g_hash_table_lookup(ctx->vars, block->identifier);
+
+    if (!alloca) {
+        _CodegenError(expr->state,
+                      "Variable \"%s\" is not defined",
+                      block->identifier);
+        exit(EXIT_FAILURE);
+    }
+
+    ctx->current_var = alloca;
+
+    for (int i=0; i<block->ops->len; i++) {
+        ASTExprRef subexpr = g_ptr_array_index(block->ops, i);
+        ASTVarExprRef op = subexpr->data;
+        if (op->type == AST_VAR_EXPR_TYPE_ADD_VAR) {
+            _CodegenContextCodegenVarBlockAddVar(ctx, subexpr);
+        } else {
+            _CodegenContextCodegenVarBlockAddInt(ctx, subexpr);
+        }
+    }
+
+    ctx->current_var = NULL;
+
+}
+
+void _CodegenContextCodegenVarBlockAddVar(CodegenContextRef ctx, ASTExprRef expr) {
+
+    g_assert(ctx != NULL);
+    g_assert(expr != NULL);
+
+    ASTVarExprRef op = expr->data;
+
+    LLVMValueRef rhs_alloca = g_hash_table_lookup(ctx->vars, op->identifier);
+
+    if (!rhs_alloca) {
+        _CodegenError(expr->state,
+                      "Variable \"%s\" is not defined",
+                      op->identifier);
+        exit(EXIT_FAILURE);
+    }
+
+    LLVMValueRef load = LLVMBuildLoad(ctx->builder, ctx->current_var, "");
+    LLVMValueRef rhs_load = LLVMBuildLoad(ctx->builder, rhs_alloca, "");
+    LLVMValueRef add = LLVMBuildNSWAdd(ctx->builder, load, rhs_load, "");
+    LLVMBuildStore(ctx->builder, add, ctx->current_var);
+
+}
+
+void _CodegenContextCodegenVarBlockAddInt(CodegenContextRef ctx, ASTExprRef expr) {
+
+    g_assert(ctx != NULL);
+    g_assert(expr != NULL);
+
+    ASTVarExprRef op = expr->data;
+
+    LLVMValueRef load = LLVMBuildLoad(ctx->builder, ctx->current_var, "");
+    LLVMValueRef value = LLVMConstInt(LLVMInt32Type(), (unsigned long long int) op->value, 0);
+    LLVMValueRef add = LLVMBuildNSWAdd(ctx->builder, load, value, "");
+    LLVMBuildStore(ctx->builder, add, ctx->current_var);
+
+}
+
 void CodegenContextAddRet(CodegenContextRef ctx) {
 
     g_assert(ctx != NULL);
+
     LLVMBuildRetVoid(ctx->builder);
+
+    LLVMPassManagerRef pass = LLVMCreatePassManager();
+
+    LLVMAddConstantPropagationPass(pass);
+    LLVMAddInstructionCombiningPass(pass);
+    LLVMAddPromoteMemoryToRegisterPass(pass);
+    LLVMAddGVNPass(pass);
+    LLVMAddCFGSimplificationPass(pass);
+
+    LLVMRunPassManager(pass, ctx->module);
+    LLVMDisposePassManager(pass);
 
 }
 
@@ -268,17 +374,6 @@ void CodegenContextOutputASM(CodegenContextRef ctx, FILE *file) {
                 LLVMRelocPIC,
                 LLVMCodeModelDefault
         );
-
-    LLVMPassManagerRef pass = LLVMCreatePassManager();
-
-    LLVMAddConstantPropagationPass(pass);
-    LLVMAddInstructionCombiningPass(pass);
-    LLVMAddPromoteMemoryToRegisterPass(pass);
-    LLVMAddGVNPass(pass);
-    LLVMAddCFGSimplificationPass(pass);
-
-    LLVMRunPassManager(pass, ctx->module);
-    LLVMDisposePassManager(pass);
 
     LLVMMemoryBufferRef buffer;
     LLVMTargetMachineEmitToMemoryBuffer(target_machine, ctx->module, LLVMAssemblyFile, &error, &buffer);

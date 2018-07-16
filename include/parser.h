@@ -6,6 +6,8 @@
 
 #include <mpc.h>
 
+#include "macros.h"
+
 struct Parser {
     GPtrArray *_subparsers;
     mpc_parser_t *_parser;
@@ -13,8 +15,7 @@ struct Parser {
     mpc_err_t *error;
 };
 
-typedef struct Parser  Parser;
-typedef struct Parser* ParserRef;
+TYPEDEF_STRUCT(Parser);
 
 ParserRef ParserCreate();
 void      ParserDelete(ParserRef parser);

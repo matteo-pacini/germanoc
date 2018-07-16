@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <glib.h>
 
+#include "macros.h"
+
 struct CodegenContext {
     LLVMModuleRef module;
     LLVMValueRef printf_fn;
@@ -16,11 +18,11 @@ struct CodegenContext {
     LLVMValueRef printf_int_fmt;
     LLVMValueRef scanf_read_int_fmt;
     LLVMBuilderRef builder;
+    LLVMValueRef current_var;
     GHashTable *vars;
 };
 
-typedef struct CodegenContext  CodegenContext;
-typedef struct CodegenContext* CodegenContextRef;
+TYPEDEF_STRUCT(CodegenContext);
 
 void              LLVMInit();
 

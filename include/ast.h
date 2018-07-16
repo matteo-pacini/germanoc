@@ -6,6 +6,8 @@
 
 #include <mpc.h>
 
+#include "macros.h"
+
 typedef enum {
     AST_EXPR_TYPE_PRINT_LITERAL,
     AST_EXPR_TYPE_PRINT_ID,
@@ -31,25 +33,26 @@ struct ASTVarDecl {
     gint32 value;
 };
 
+struct ASTVarBlockExpr {
+    gchar *identifier;
+    GPtrArray *ops;
+};
+
 struct ASTVarExpr {
-    gchar *name;
+    gchar *identifier;
     ASTVarExprType type;
     gint32 value;
 };
 
-typedef struct ASTExpr  ASTExpr;
-typedef struct ASTExpr* ASTExprRef;
-
-typedef struct ASTVarDecl  ASTVarDecl;
-typedef struct ASTVarDecl* ASTVarDeclRef;
-
-typedef struct ASTVarExpr  ASTVarExpr;
-typedef struct ASTVarExpr* ASTVarExprRef;
+TYPEDEF_STRUCT(ASTExpr);
+TYPEDEF_STRUCT(ASTVarDecl);
+TYPEDEF_STRUCT(ASTVarBlockExpr);
+TYPEDEF_STRUCT(ASTVarExpr);
 
 ASTExprRef ASTExprCreatePrintLiteral(const gchar *str);
-ASTExprRef ASTExprCreatePrintIdentifier(const gchar *ident);
-ASTExprRef ASTExprCreateVarDecl(const gchar *name, gint32 value);
-ASTExprRef ASTExprCreateReadInt(const gchar *name);
+ASTExprRef ASTExprCreatePrintIdentifier(const gchar *identifier);
+ASTExprRef ASTExprCreateVarDecl(const gchar *identifier, gint32 value);
+ASTExprRef ASTExprCreateReadInt(const gchar *identifier);
 
 ASTExprRef ASTExprCreateVarExpr(const gchar *identifier, ASTVarExprType type, gint32 value);
 ASTExprRef ASTExprCreateVarBlockExpr(const gchar *identifier, GPtrArray *ops);
