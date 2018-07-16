@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
     int nerrors;
     nerrors = arg_parse(argc,argv,argtable);
 
-    printf("MosconiLang Compiler v" VERSION ".\n");
+    printf("MosconiLang Compiler (mosconic) v" VERSION ".\n");
     gchar** authors = g_strsplit(AUTHORS, "|", 2);
     for (gchar **ptr = authors; *ptr; ptr++) {
         printf("Author: %s.\n", *ptr);
@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
 
     if (help->count > 0)
     {
-        printf("Usage: germanoc");
+        printf("Usage: mosconic");
         arg_print_syntax(stdout, argtable, "\n");
         arg_print_glossary(stdout, argtable, "  %-25s %s\n");
         arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (nerrors > 0) {
-        arg_print_errors(stderr, end, "germanoc");
+        arg_print_errors(stderr, end, "mosconic");
         fprintf(stderr, "Try 'germanoc --help' for more information.\n");
         arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
         return EXIT_FAILURE;
