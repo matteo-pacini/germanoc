@@ -42,6 +42,37 @@ ASTExprRef ASTExprCreateReadInt(const gchar *name) {
 
 }
 
+ASTExprRef ASTExprCreateVarExpr(const gchar *name, ASTVarExprType type, gint32 value) {
+
+    ASTExprRef expr = g_new0(ASTExpr, 1);
+    expr->type = AST_EXPR_TYPE_VAR_EXPR;
+
+    ASTVarExprRef var_expr = g_new0(ASTVarExpr, 1);
+    if (name) {
+        var_expr->name = strdup(name);
+    }
+    var_expr->type = type;
+    var_expr->value = value;
+
+    expr->data = var_expr;
+
+    return expr;
+
+}
+
+ASTExprRef ASTExprCreateVarBlockExpr(const gchar *identifier, GPtrArray *ops) {
+
+    g_assert(identifier != NULL);
+    g_assert(ops != NULL);
+
+    ASTExprRef expr = g_new0(ASTExpr, 1);
+    expr->type = AST_EXPR_TYPE_VAR_BLOCK_EXPR;
+    expr->data = ops;
+
+    return expr;
+
+}
+
 void ASTExprDelete(ASTExprRef expr) {
 
     if (expr) {
@@ -71,7 +102,23 @@ void ASTExprDelete(ASTExprRef expr) {
             }
         }
 
-        if (expr->state) free(expr->state);
+        if (expr->type == AST_EXPR_TYPE_VAR_EXPR) {
+            if (expr->data) {
+                ASTVarExprRef var_expr = expr->data;
+                if (var_expr->name) free(var_expr->name);
+                free(var_expr);
+            }
+        }
+
+        if (expr->type == AST_EXPR_TYPE_VAR_BLOCK_EXPR) {
+            if (expr->data) {
+                g_ptr_array_free(expr->data, TRUE);
+            }
+        }
+
+        if (expr->state)  {
+            free(expr->state);
+        }
 
         free(expr);
 

@@ -116,6 +116,11 @@ void _CodegenContextCodegenExpr(CodegenContextRef ctx, ASTExprRef expr) {
         case AST_EXPR_TYPE_READ_INT:
             _CodegenContextCodegenReadInt(ctx, expr);
             break;
+        case AST_EXPR_TYPE_VAR_EXPR:
+            g_assert("We should never reach this point!");
+            break;
+        case AST_EXPR_TYPE_VAR_BLOCK_EXPR:
+            break;
     }
 
 }
