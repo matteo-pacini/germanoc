@@ -363,7 +363,7 @@ void CodegenContextOutputASM(CodegenContextRef ctx, FILE *file, int verbose) {
     }
 
     if (verbose) {
-        printf("Default target triple: %s\n", triple);
+        printf("\nDefault target triple: %s\n", triple);
     }
 
     LLVMDisposeMessage(triple);
@@ -372,7 +372,7 @@ void CodegenContextOutputASM(CodegenContextRef ctx, FILE *file, int verbose) {
         LLVMCreateTargetMachine(
                 target,
                 triple,
-                "",
+                "x86-64",
                 "",
                 LLVMCodeGenLevelDefault,
                 LLVMRelocPIC,
