@@ -7,4 +7,8 @@ set(CMAKE_C_STANDARD 99)
 # TARGET #
 ##########
 
-set(SOURCES ${SOURCES} src/ast.c src/codegen.c src/main.c src/parser.c PARENT_SCOPE)
+set(SOURCES ${SOURCES}
+        "${CMAKE_CURRENT_SOURCE_DIR}/ast.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/codegen.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/main.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/parser.c" PARENT_SCOPE)

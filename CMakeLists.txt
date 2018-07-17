@@ -3,26 +3,11 @@ project(germanoc)
 
 set(CMAKE_C_STANDARD 99)
 
-#############
-# ARGTABLE3 #
-#############
+########
+# LIBS #
+########
 
-add_subdirectory(argtable3)
-include_directories(argtable3)
-
-#######
-# MPC #
-#######
-
-add_subdirectory(mpc)
-include_directories(mpc)
-
-############
-# COMPILER #
-############
-
-add_subdirectory(compiler)
-include_directories(compiler)
+add_subdirectory(lib)
 
 ########
 # LLVM #
@@ -53,9 +38,10 @@ include_directories(${GLIB_INCLUDE_DIRS})
 # TARGET #
 ##########
 
-include_directories(include)
 add_subdirectory(include)
 add_subdirectory(src)
+
+include_directories(${INCLUDE})
 
 add_definitions(-DVERSION="0.1")
 add_definitions(-DAUTHORS="Matteo Pacini <m@matteopacini.me>|Andrea Proietto <>")

@@ -7,4 +7,4 @@ set(CMAKE_C_STANDARD 99)
 # TARGET #
 ##########
 
-set(SOURCES ${SOURCES} include/ast.h include/codegen.h include/parser.h include/macros.h PARENT_SCOPE)
+set(INCLUDE ${INCLUDE} "${CMAKE_CURRENT_SOURCE_DIR}" PARENT_SCOPE)
