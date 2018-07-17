@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
         printf("LLVM IR:\n");
         CodegenContextOutputIR(ctx, stdout);
         printf("\nASM:\n");
-        CodegenContextOutputASM(ctx, stdout);
+        CodegenContextOutputASM(ctx, stdout, verbose->count > 0);
         printf("\n");
     }
 
@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
         gchar *source = g_strdup_printf("%s.s", basename);
 
         FILE *source_f = fopen(source, "w");
-        CodegenContextOutputASM(ctx, source_f);
+        CodegenContextOutputASM(ctx, source_f, verbose->count > 0);
         fclose(source_f);
 
         CompilerCompile(compiler, source, (char *) *output->filename);

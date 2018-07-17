@@ -346,7 +346,7 @@ void CodegenContextOutputIR(CodegenContextRef ctx, FILE *file) {
     free(ir);
 }
 
-void CodegenContextOutputASM(CodegenContextRef ctx, FILE *file) {
+void CodegenContextOutputASM(CodegenContextRef ctx, FILE *file, int verbose) {
 
     g_assert(ctx != NULL);
     g_assert(file != NULL);
@@ -360,6 +360,10 @@ void CodegenContextOutputASM(CodegenContextRef ctx, FILE *file) {
         LLVMDisposeMessage(error);
         LLVMDisposeMessage(triple);
         return;
+    }
+
+    if (verbose) {
+        printf("Default target triple: %s\n", triple);
     }
 
     LLVMDisposeMessage(triple);

@@ -31,6 +31,6 @@ void              CodegenContextDelete(CodegenContextRef ctx);
 void              CodegenContextCodegen(CodegenContextRef ctx, GPtrArray *exprs);
 void              CodegenContextAddRet(CodegenContextRef ctx);
 void              CodegenContextOutputIR(CodegenContextRef ctx, FILE *file);
-void              CodegenContextOutputASM(CodegenContextRef ctx, FILE *file);
+void              CodegenContextOutputASM(CodegenContextRef ctx, FILE *file, gboolean verbose);
 
 #endif //CODEGEN_H
