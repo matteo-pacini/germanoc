@@ -110,7 +110,7 @@ static mpc_val_t *mpcf_print_expr(int n, mpc_val_t **xs) {
 }
 
 // var_expr_sum: DOMANI A ZURIGO SI SVOLGERANNO GLI ACCOPPIAMENTI CON |STATE| (<identifier>|<integer>)
-static mpc_val_t *mpcf_var_expr_sum(int n, mpc_val_t **xs) {
+static mpc_val_t *mpcf_var_expr_add(int n, mpc_val_t **xs) {
 
     free(xs[0]);
     mpc_state_t* state = xs[1]; // will be copied
@@ -136,6 +136,32 @@ static mpc_val_t *mpcf_var_expr_sum(int n, mpc_val_t **xs) {
 
 }
 
+// var_expr_sub: L'ATLETA DI FONDO E' STATO PRECEDUTO DA |STATE| (<identifier>|<integer>)
+static mpc_val_t *mpcf_var_expr_sub(int n, mpc_val_t **xs) {
+
+    free(xs[0]);
+    mpc_state_t* state = xs[1]; // will be copied
+    GVariant *v = xs[2];        // will be disposed with g_variant_unref
+
+    ASTExprRef expr = NULL;
+
+    if (g_variant_is_of_type(v, G_VARIANT_TYPE_INT32)) {
+        gint32 value = g_variant_get_int32(v);
+        expr = ASTExprCreateVarExpr(NULL, AST_VAR_EXPR_TYPE_SUB_INT, value);
+    } else {
+        gsize value_size;
+        const gchar *value = g_variant_get_string(v, &value_size); // no need to free this - see func docs
+        expr = ASTExprCreateVarExpr(value, AST_VAR_EXPR_TYPE_SUB_VAR, 0);
+    }
+    g_variant_unref(v);
+
+    expr->state = g_new0(mpc_state_t, 1);
+    memcpy(expr->state, state, sizeof(mpc_state_t));
+    free(state);
+
+    return expr;
+
+}
 
 // var_block_expr : ANDIAMO ALLE NOTIZIE SU |STATE| <identifier> <var_expr>* ME TOCCA RIFARE TUTTO DA CAPO
 static mpc_val_t *mpcf_var_block_expr(int n, mpc_val_t **xs) {
@@ -218,7 +244,8 @@ ParserRef ParserCreate() {
     mpc_parser_t * read_int_expr = mpc_new("read_int_expr");
     mpc_parser_t * var_block_expr = mpc_new("var_block_expr");
     mpc_parser_t * var_expr = mpc_new("var_expr");
-    mpc_parser_t * var_expr_sum = mpc_new("var_expr_sum");
+    mpc_parser_t * var_expr_add = mpc_new("var_expr_add");
+    mpc_parser_t * var_expr_sub = mpc_new("var_expr_sub");
     mpc_parser_t * expr = mpc_new("expr");
     mpc_parser_t * mosconilang = mpc_new("mosconilang");
 
@@ -308,17 +335,37 @@ ParserRef ParserCreate() {
     // var_expr :
     mpc_define(var_expr,
         mpc_or(
-            1,
-            var_expr_sum
+            2,
+            var_expr_add,
+            var_expr_sub
         )
     );
 
-    // var_expr_sum: DOMANI A ZURIGO SI SVOLGERANNO GLI ACCOPPIAMENTI CON (<identifier>|<integer>)
-    mpc_define(var_expr_sum,
+    // var_expr_add: DOMANI A ZURIGO SI SVOLGERANNO GLI ACCOPPIAMENTI CON (<identifier>|<integer>)
+    mpc_define(var_expr_add,
         mpc_and(
             3,
-            mpcf_var_expr_sum,
+            mpcf_var_expr_add,
             mpc_tok(mpc_string("DOMANI A ZURIGO SI SVOLGERANNO GLI ACCOPPIAMENTI CON")),
+            mpc_state(),
+            mpc_tok(
+                mpc_or(
+                    2,
+                    mpc_apply(identifier, mpca_string_to_gvariant),
+                    mpc_apply(integer, mpca_gint32_to_gvariant)
+                )
+            ),
+            free,
+            free
+        )
+    );
+
+    // var_expr_sub: L'ATLETA DI FONDO E' STATO PRECEDUTO DA (<identifier>|<integer>)
+    mpc_define(var_expr_sub,
+        mpc_and(
+            3,
+            mpcf_var_expr_sub, // same as ar_expr_add
+            mpc_tok(mpc_string("L'ATLETA DI FONDO E' STATO PRECEDUTO DA")),
             mpc_state(),
             mpc_tok(
                 mpc_or(
@@ -376,7 +423,8 @@ ParserRef ParserCreate() {
     g_ptr_array_add(parser->_subparsers, read_int_expr);
     g_ptr_array_add(parser->_subparsers, var_block_expr);
     g_ptr_array_add(parser->_subparsers, var_expr);
-    g_ptr_array_add(parser->_subparsers, var_expr_sum);
+    g_ptr_array_add(parser->_subparsers, var_expr_add);
+    g_ptr_array_add(parser->_subparsers, var_expr_sub);
 
     return parser;
 

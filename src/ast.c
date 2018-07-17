@@ -57,7 +57,10 @@ ASTExprRef ASTExprCreateVarExpr(const gchar *identifier, ASTVarExprType type, gi
 
     g_assert(
         (type == AST_VAR_EXPR_TYPE_ADD_VAR && identifier != NULL) ||
-        (type == AST_VAR_EXPR_TYPE_ADD_INT && identifier == NULL))
+        (type == AST_VAR_EXPR_TYPE_ADD_INT && identifier == NULL) ||
+        (type == AST_VAR_EXPR_TYPE_SUB_VAR && identifier != NULL) ||
+        (type == AST_VAR_EXPR_TYPE_SUB_INT && identifier == NULL)
+    )
     ;
 
     ASTExprRef expr = g_new0(ASTExpr, 1);

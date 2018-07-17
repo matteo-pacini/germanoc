@@ -19,7 +19,9 @@ typedef enum {
 
 typedef enum {
     AST_VAR_EXPR_TYPE_ADD_VAR,
-    AST_VAR_EXPR_TYPE_ADD_INT
+    AST_VAR_EXPR_TYPE_ADD_INT,
+    AST_VAR_EXPR_TYPE_SUB_VAR,
+    AST_VAR_EXPR_TYPE_SUB_INT
 } ASTVarExprType;
 
 struct ASTExpr{
