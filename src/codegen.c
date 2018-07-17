@@ -372,7 +372,7 @@ void CodegenContextOutputASM(CodegenContextRef ctx, FILE *file, int verbose) {
         LLVMCreateTargetMachine(
                 target,
                 triple,
-                "x86-64",
+                "",
                 "",
                 LLVMCodeGenLevelDefault,
                 LLVMRelocPIC,
