@@ -7,6 +7,8 @@ set(CMAKE_C_STANDARD 99)
 # TARGET #
 ##########
 
+add_subdirectory(codegen)
+
 set(SOURCES ${SOURCES}
         "${CMAKE_CURRENT_SOURCE_DIR}/ast.c"
         "${CMAKE_CURRENT_SOURCE_DIR}/codegen.c"
