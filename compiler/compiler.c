@@ -19,7 +19,7 @@
     #define CLANG_PATH "/usr/bin/clang"
     #include <TargetConditionals.h>
 #elif __linux__
-    #define CLANG_PATH "/usr/bin/clang"
+    #define GCC_PATH "/usr/bin/gcc"
     #include <sys/wait.h>
 #endif
 
@@ -59,10 +59,10 @@ CompilerRef CompilerFind() {
         #error "Compiler supports the macOS target only"
     #endif
 #elif __linux__
-        if (_file_exists(CLANG_PATH)) {
+        if (_file_exists(GCC_PATH)) {
             CompilerRef compiler = malloc(sizeof(Compiler));
-            compiler->type = CLANG;
-            compiler->path = strdup(CLANG_PATH);
+            compiler->type = GCC;
+            compiler->path = strdup(GCC_PATH);
             return compiler;
         }
         return NULL;
