@@ -11,6 +11,3 @@ add_library(argtable3 STATIC argtable3.c)
 
 set(INCLUDE ${INCLUDE}
         "${CMAKE_CURRENT_SOURCE_DIR}" PARENT_SCOPE)
-
-set(SOURCES ${SOURCES}
-        "${CMAKE_CURRENT_SOURCE_DIR}/argtable3.c" PARENT_SCOPE)

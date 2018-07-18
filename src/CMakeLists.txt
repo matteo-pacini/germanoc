@@ -14,4 +14,5 @@ set(SOURCES ${SOURCES}
         "${CMAKE_CURRENT_SOURCE_DIR}/ast.c"
         "${CMAKE_CURRENT_SOURCE_DIR}/codegen.c"
         "${CMAKE_CURRENT_SOURCE_DIR}/main.c"
-        "${CMAKE_CURRENT_SOURCE_DIR}/parser.c" PARENT_SCOPE)
+        "${CMAKE_CURRENT_SOURCE_DIR}/parser.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/compiler.c" PARENT_SCOPE)

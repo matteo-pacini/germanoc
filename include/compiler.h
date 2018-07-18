@@ -2,7 +2,10 @@
 #ifndef COMPILER_H
 #define COMPILER_H
 
+#include <glib.h>
+
 typedef enum {
+    UNDEFINED,
     CLANG,
     GCC,
     VISUAL_STUDIO
@@ -18,6 +21,6 @@ typedef struct Compiler* CompilerRef;
 
 CompilerRef CompilerFind();
 void        CompilerDelete(CompilerRef compiler);
-void        CompilerCompile(CompilerRef compiler, char *source, char* output);
+void        CompilerCompile(CompilerRef compiler, gchar *source, gchar* output);
 
 #endif //COMPILER_H

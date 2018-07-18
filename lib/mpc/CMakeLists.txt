@@ -12,5 +12,3 @@ add_library(mpc STATIC mpc.c)
 set(INCLUDE ${INCLUDE}
         "${CMAKE_CURRENT_SOURCE_DIR}" PARENT_SCOPE)
 
-set(SOURCES ${SOURCES}
-        "${CMAKE_CURRENT_SOURCE_DIR}/mpc.c" PARENT_SCOPE)

@@ -199,7 +199,7 @@ void CodegenContextOutputASM(CodegenContextRef ctx, FILE *file, int verbose) {
     }
 
     if (verbose) {
-        printf("\nDefault target triple: %s\n", triple);
+        printf("\nDefault target triple: %s\n\n", triple);
     }
 
     LLVMDisposeMessage(triple);

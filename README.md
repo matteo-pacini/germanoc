@@ -103,19 +103,20 @@ Per terminare la serie di operazioni, si utilizzi la seguente istruzione:
 
 # Requisiti
 
-## macos
+## macos (Homebrew)
 
     brew install cmake glib pkg-config llvm
     
 ## Linux (apt-get)
 
     sudo apt-get install build-essential \
+                         clang \
                          llvm-dev \
                          libglib2.0-dev \
                          pkg-config \
                          cmake
     
-## Windows (MINGW64)
+## Windows (MSYS2/MinGW)
 
     pacman -S mingw-w64-x86_64-toolchain \
               mingw-w64-x86_64-clang \

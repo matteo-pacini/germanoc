@@ -50,4 +50,4 @@ add_executable(mosconic ${SOURCES})
 
 llvm_map_components_to_libnames(LLVM_LIBS core native bitwriter)
 
-target_link_libraries(mosconic ${LLVM_LIBS} ${GLIB_LDFLAGS} mpc compiler argtable3)
+target_link_libraries(mosconic ${LLVM_LIBS} ${GLIB_LDFLAGS} mpc argtable3)

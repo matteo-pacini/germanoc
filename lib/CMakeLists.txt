@@ -4,7 +4,6 @@ project(germanoc)
 set(CMAKE_C_STANDARD 99)
 
 add_subdirectory(argtable3)
-add_subdirectory(compiler)
 add_subdirectory(mpc)
 
 set(INCLUDE ${INCLUDE} PARENT_SCOPE)
