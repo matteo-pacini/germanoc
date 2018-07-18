@@ -8,6 +8,7 @@ set(CMAKE_C_STANDARD 99)
 ##########
 
 add_subdirectory(codegen)
+add_subdirectory(parser)
 
 set(SOURCES ${SOURCES}
         "${CMAKE_CURRENT_SOURCE_DIR}/ast.c"

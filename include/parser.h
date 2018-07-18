@@ -8,6 +8,11 @@
 
 #include "macros.h"
 
+typedef enum {
+    G_VARIANT_STRING_TYPE_IDENTIFIER,
+    G_VARIANT_STRING_TYPE_LITERAL
+} GVariantStringType;
+
 struct Parser {
     GPtrArray *_subparsers;
     mpc_parser_t *_parser;
