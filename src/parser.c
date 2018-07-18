@@ -234,6 +234,8 @@ static void mpc_dtor_garray(mpc_val_t *val) {
 // Parser //
 ////////////
 
+static gchar *_ParserFilterComments(const gchar* buffer);
+
 ParserRef ParserCreate() {
 
     ParserRef parser = g_new0(Parser, 1);
@@ -451,24 +453,12 @@ void ParserDelete(ParserRef parser) {
     }
 }
 
-void ParserParseFile(ParserRef parser, const gchar *filename) {
+static gchar *_ParserFilterComments(const gchar* buffer) {
 
-    g_assert(parser != NULL);
-    g_assert(filename != NULL && strlen(filename) > 0);
-
-    gchar *buffer = NULL;
-
-    FILE *f = fopen(filename, "r");
-    struct stat st;
-    g_assert(!stat(filename, &st));
-
-    buffer = malloc(sizeof(gchar) * (st.st_size+1));
-    fread(buffer, (size_t) st.st_size, 1, f);
-    fclose(f);
-    buffer[st.st_size] = '\0';
+    g_assert(buffer != NULL);
 
     size_t new_buffer_size = 0;
-    gchar *it = buffer;
+    gchar *it = (gchar *) buffer;
 
     while (*it != '\0') {
         if (*it == '#') {
@@ -479,7 +469,7 @@ void ParserParseFile(ParserRef parser, const gchar *filename) {
     }
 
     gchar *new_buffer = malloc(sizeof(gchar) * (new_buffer_size+1));
-    it = buffer;
+    it = (gchar *) buffer;
     int idx = 0;
 
     while (*it != '\0') {
@@ -492,6 +482,22 @@ void ParserParseFile(ParserRef parser, const gchar *filename) {
 
     new_buffer[new_buffer_size] = '\0';
 
+    return new_buffer;
+
+}
+
+void ParserParseFile(ParserRef parser, const gchar *filename) {
+
+    g_assert(parser != NULL);
+    g_assert(filename != NULL && strlen(filename) > 0);
+
+    gchar *buffer = NULL;
+    gsize buffer_size = 0;
+    GError *error = NULL;
+
+    g_file_get_contents(filename, &buffer, &buffer_size, &error);
+
+    char *new_buffer = _ParserFilterComments(buffer);
     free(buffer);
 
     mpc_result_t result;
