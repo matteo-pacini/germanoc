@@ -3,6 +3,8 @@
 
 #include "ast.h"
 
+#include <sys/stat.h>
+
 typedef enum {
     G_VARIANT_STRING_TYPE_IDENTIFIER,
     G_VARIANT_STRING_TYPE_LITERAL
@@ -454,11 +456,51 @@ void ParserParseFile(ParserRef parser, const gchar *filename) {
     g_assert(parser != NULL);
     g_assert(filename != NULL && strlen(filename) > 0);
 
+    gchar *buffer = NULL;
+
+    FILE *f = fopen(filename, "r");
+    struct stat st;
+    g_assert(!stat(filename, &st));
+
+    buffer = malloc(sizeof(gchar) * (st.st_size+1));
+    fread(buffer, (size_t) st.st_size, 1, f);
+    fclose(f);
+    buffer[st.st_size] = '\0';
+
+    size_t new_buffer_size = 0;
+    gchar *it = buffer;
+
+    while (*it != '\0') {
+        if (*it == '#') {
+            while (*it != '\n' && *it != '\r' && *it != EOF) it++;
+        } else {
+            new_buffer_size++; it++;
+        }
+    }
+
+    gchar *new_buffer = malloc(sizeof(gchar) * (new_buffer_size+1));
+    it = buffer;
+    int idx = 0;
+
+    while (*it != '\0') {
+        if (*it == '#') {
+            while (*it != '\n' && *it != '\r' && *it != EOF) it++;
+        } else {
+            new_buffer[idx] = *it; idx++; it++;
+        }
+    }
+
+    new_buffer[new_buffer_size] = '\0';
+
+    free(buffer);
+
     mpc_result_t result;
-    if (mpc_parse_contents(filename, parser->_parser, &result)) {
+    if (mpc_parse("input", new_buffer, parser->_parser, &result)) {
         parser->output = result.output;
     } else {
         parser->error = result.error;
     }
+
+    free(new_buffer);
 
 }
