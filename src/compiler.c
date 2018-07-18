@@ -69,9 +69,11 @@ void CompilerCompile(CompilerRef compiler, gchar *source, gchar* output) {
     g_assert(output != NULL);
 
     gchar *compiler_stdout = NULL;
+    GError *error = NULL;
 
     gchar *argv[] = {compiler->path, source, "-o", output, NULL};
 
+    gboolean result =
     g_spawn_sync(
         NULL,
         argv,
@@ -82,10 +84,15 @@ void CompilerCompile(CompilerRef compiler, gchar *source, gchar* output) {
         &compiler_stdout,
         NULL,
         NULL,
-        NULL
+        &error
     );
 
     printf("Compiler output:\n\"%s\"\n", compiler_stdout);
     free(compiler_stdout);
+
+    if (!result) {
+        fprintf(stderr, "%s\n", error->message);
+        g_error_free(error);
+    }
 
 }
