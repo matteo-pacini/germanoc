@@ -2,6 +2,7 @@
 #include "compiler.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #if _WIN32
     #if defined(_WIN64)
